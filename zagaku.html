@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>エアコンIoT自由研究 座学編</title>
+<style>
+:root{--ink:#20242a;--muted:#58616c;--line:#cfd5dc;--blue:#eaf4ff;--green:#ebf8ef;--orange:#fff4e5;--red:#fff0f0;--purple:#f3efff;--paper:#fff;--bg:#f2f4f7}
+*{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans JP",sans-serif;line-height:1.75}
+main{max-width:1040px;margin:28px auto;padding:46px 54px;background:var(--paper);box-shadow:0 2px 16px #0001}
+h1{font-size:2rem;line-height:1.35;margin:0 0 8px} h2{font-size:1.45rem;margin-top:2.2em;border-bottom:2px solid #333;padding-bottom:.25em} h3{font-size:1.12rem;margin-top:1.7em} p{margin:.7em 0} .lead{font-size:1.06rem;color:#333}.small{font-size:.9rem;color:var(--muted)}
+.note,.ok,.warn,.why{padding:13px 16px;margin:16px 0;border-left:5px solid;border-radius:6px}.note{background:var(--blue);border-color:#4385c5}.ok{background:var(--green);border-color:#3b9559}.warn{background:var(--red);border-color:#ba4a4a}.why{background:var(--orange);border-color:#d68826}
+table{width:100%;border-collapse:collapse;margin:14px 0 22px}th,td{border:1px solid #aeb6bf;padding:9px 11px;vertical-align:top}th{background:#f0f2f4;text-align:left}code,.mono{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;background:#f3f3f3;padding:.08em .35em;border-radius:4px}pre{background:#f6f7f8;border:1px solid #d8dde3;padding:14px;overflow:auto;line-height:1.5}
+svg{display:block;width:100%;height:auto;margin:14px 0 22px;background:#fff;border:1px solid #dfe3e7;border-radius:8px}.toc{columns:2;column-gap:30px;background:#f7f8fa;padding:18px 24px;border-radius:8px}.toc a{color:#254f78;text-decoration:none}.quiz details{border:1px solid #ccd2d9;border-radius:7px;padding:10px 14px;margin:9px 0}.tag{display:inline-block;border:1px solid #999;border-radius:999px;padding:1px 8px;font-size:.83rem;margin-right:5px;background:#fafafa}
+@media(max-width:700px){main{margin:0;padding:25px 18px}.toc{columns:1}}
+@media print{body{background:#fff}main{box-shadow:none;margin:0;max-width:none;padding:20mm}a{color:#000;text-decoration:none}.quiz details{break-inside:avoid}}
+</style>
+</head>
+<body><main>
+<a  href="./">←</a>
+<h1>エアコンIoT自由研究 ― 座学編</h1>
+<p class="lead">Raspberry Pi Pico 2 WHで、日立「白くまくん RAS-AJ3626S」の純正リモコン信号を学習し、赤外線LEDから再送信する。さらにDHT20で温度・湿度を測る。その工作を「なぜその配線になるのか」から理解するための資料。</p>
+<p class="small">対象部品：Pico 2 WH / DHT20 / PL-IRM1838B / OSI5LA5A33A-B / BC337-40BU / EIC-801 / 5kΩ・2kΩ・330Ω・100Ω / 0.1µF・47µF</p>
+<div class="note"><strong>この資料の目的</strong><br>配線手順を暗記するのではなく、①電圧・電流・抵抗、②GPIO、③I²C、④トランジスタ、⑤赤外線通信、⑥コンデンサ、が今回の回路のどこで使われているかを説明できる状態を目指す。</div>
+
+<div class="toc"><strong>目次</strong><br>
+<a href="#overview">1. 全体像</a><br><a href="#electricity">2. 電圧・電流・抵抗</a><br><a href="#breadboard">3. ブレッドボード</a><br><a href="#pico">4. Pico 2 WH</a><br><a href="#resistors">5. 今回の4種類の抵抗</a><br><a href="#capacitors">6. コンデンサ</a><br><a href="#transistor">7. BC337トランジスタ</a><br><a href="#ir">8. 赤外線リモコン</a><br><a href="#receiver">9. PL-IRM1838B</a><br><a href="#i2c">10. I²CとDHT20</a><br><a href="#switch">11. タクトスイッチ</a><br><a href="#software">12. ソフトウェアとの対応</a><br><a href="#experiment">13. 実験で何を確かめるか</a><br><a href="#safety">14. 壊さないための原則</a><br><a href="#glossary">15. 用語集</a><br><a href="#quiz">16. 確認問題</a></div>
+
+<h2 id="overview">1. この自由研究の全体像</h2>
+<p>Pico 2 WHは「判断して信号を出す中心装置」。DHT20から温度・湿度を読み、PL-IRM1838Bで純正リモコンの赤外線信号を受信し、必要なときはBC337-40BUを介して赤外線LEDを点滅させる。</p>
+<svg viewBox="0 0 980 330" aria-label="全体構成図"><defs><marker id="a" markerWidth="9" markerHeight="9" refX="8" refY="3" orient="auto"><path d="M0,0 L9,3 L0,6 Z" fill="#333"/></marker></defs>
+<rect x="380" y="105" width="220" height="120" rx="16" fill="#eaf4ff" stroke="#333"/><text x="490" y="145" text-anchor="middle" font-size="24">Pico 2 WH</text><text x="490" y="177" text-anchor="middle" font-size="16">GPIO / I²C / PWM</text><text x="490" y="202" text-anchor="middle" font-size="16">MicroPython</text>
+<rect x="50" y="45" width="230" height="90" rx="12" fill="#ebf8ef" stroke="#333"/><text x="165" y="82" text-anchor="middle" font-size="20">DHT20</text><text x="165" y="108" text-anchor="middle">温度・湿度 → I²C</text>
+<rect x="50" y="205" width="230" height="90" rx="12" fill="#f3efff" stroke="#333"/><text x="165" y="242" text-anchor="middle" font-size="20">PL-IRM1838B</text><text x="165" y="268" text-anchor="middle">純正リモコンを受信</text>
+<rect x="700" y="105" width="230" height="120" rx="12" fill="#fff4e5" stroke="#333"/><text x="815" y="142" text-anchor="middle" font-size="20">BC337 + IR LED</text><text x="815" y="170" text-anchor="middle">38kHz前後で点滅</text><text x="815" y="197" text-anchor="middle">→ エアコンへ送信</text>
+<line x1="280" y1="90" x2="380" y2="135" stroke="#333" stroke-width="2" marker-end="url(#a)"/><line x1="280" y1="250" x2="380" y2="195" stroke="#333" stroke-width="2" marker-end="url(#a)"/><line x1="600" y1="165" x2="700" y2="165" stroke="#333" stroke-width="2" marker-end="url(#a)"/>
+</svg>
+<div class="why"><strong>研究のポイント</strong><br>完成品を作るだけでなく、「受信した純正リモコン信号を測定 → 時間列として記録 → 自分の回路で再現」という流れそのものが実験になる。リモコン方式を最初からNEC方式などと決めつけず、実測から確認する。</div>
+
+<h2 id="electricity">2. まず電圧・電流・抵抗を理解する</h2>
+<h3>2-1. 電圧 V</h3><p>電気を動かそうとする「差」。今回よく出るのは<strong>3.3V</strong>と<strong>約5V</strong>。PicoのGPIO信号は3.3V系であり、5VをGPIOへ直接入れてはいけない。</p>
+<h3>2-2. 電流 A</h3><p>実際に流れる電気の量。LEDやトランジスタには「流してよい電流」に限界があるため、抵抗で制限する。</p>
+<h3>2-3. 抵抗 Ω</h3><p>電流を流れにくくする部品。抵抗値が大きいほど、同じ電圧なら電流は少なくなる。</p>
+<div class="note"><strong>オームの法則</strong><br><span class="mono">I = V ÷ R</span>。たとえば3.4Vを330Ωにかけると、理想計算では約0.0103A = 10.3mA。</div>
+<h3>2-4. GNDとは</h3><p>回路の電圧を考える基準点。Pico、DHT20、IR受信器、IR送信回路は<strong>GNDを共通</strong>にする。同じ基準を共有しないと、GPIOのHIGH/LOWを正しく判断できない。</p>
+<h3>2-5. ショートとは</h3><p>電源とGNDを非常に小さな抵抗で直接つないでしまうこと。大電流が流れ、部品やUSB電源を壊す原因になる。</p>
+
+<h2 id="breadboard">3. ブレッドボード EIC-801は何をしているか</h2>
+<p>ブレッドボードは、ハンダ付けせずに部品同士を電気的につなぐための板。EIC-801は今回のPico 2 WHと周辺回路を試作するのに十分な大きさがある。</p>
+<svg viewBox="0 0 950 390" aria-label="ブレッドボード構造"><text x="475" y="40" text-anchor="middle" font-size="24">ブレッドボードの内部接続イメージ</text>
+<rect x="80" y="75" width="790" height="250" rx="18" fill="#fafafa" stroke="#777"/>
+<rect x="125" y="115" width="700" height="35" fill="#fff0f0" stroke="#c88"/><text x="475" y="139" text-anchor="middle">電源レール（例：3.3V）</text>
+<rect x="125" y="255" width="700" height="35" fill="#eef4ff" stroke="#88a"/><text x="475" y="279" text-anchor="middle">GNDレール</text>
+<line x1="475" y1="160" x2="475" y2="245" stroke="#555" stroke-width="6"/><text x="485" y="208" font-size="14">中央の溝</text>
+<g fill="#fff" stroke="#666"><circle cx="220" cy="190" r="7"/><circle cx="250" cy="190" r="7"/><circle cx="280" cy="190" r="7"/><circle cx="310" cy="190" r="7"/><circle cx="340" cy="190" r="7"/><circle cx="610" cy="190" r="7"/><circle cx="640" cy="190" r="7"/><circle cx="670" cy="190" r="7"/><circle cx="700" cy="190" r="7"/><circle cx="730" cy="190" r="7"/></g>
+<line x1="220" y1="215" x2="340" y2="215" stroke="#2c7" stroke-width="5"/><line x1="610" y1="215" x2="730" y2="215" stroke="#2c7" stroke-width="5"/><text x="280" y="240" text-anchor="middle" font-size="14">同じ5穴が内部で接続</text><text x="670" y="240" text-anchor="middle" font-size="14">反対側とは別</text>
+</svg>
+<div class="warn"><strong>重要</strong><br>見た目で穴同士が近くても、内部でつながっているとは限らない。逆に、離れて見える電源レールが内部で一直線につながっている場合がある。配線前にブレッドボードの接続方向を理解する。</div>
+
+<h2 id="pico">4. Pico 2 WHの電源とGPIO</h2>
+<table><tr><th>名称</th><th>今回の意味</th></tr><tr><td>3V3(OUT)</td><td>3.3Vの電源。DHT20やPL-IRM1838Bへ供給。</td></tr><tr><td>GPIO</td><td>3.3V系のデジタル信号端子。入力・出力・PWM・I²Cなどに使う。</td></tr><tr><td>GND</td><td>回路全体の0V基準。</td></tr><tr><td>VBUS</td><td>USB給電時にUSB由来の約5Vが現れる。今回のIR LED電源側に使用。</td></tr></table>
+<div class="warn"><strong>「5Vがある」≠「GPIOが5V対応」</strong><br>VBUSの約5VをIR LEDの電源として使うことはできるが、5VをGPIOへ直接入力してよいという意味ではない。GPIOは3.3V系。</div>
+<p>今回の割り当ては、DHT20のSDA=GP4、SCL=GP5、ボタン=GP15、IR受信=GP16、IR送信=GP18。</p>
+
+<h2 id="resistors">5. 今回は「4種類の抵抗」があり、役割が全部違う</h2>
+<table><tr><th>値</th><th>場所</th><th>役割</th></tr>
+<tr><td><strong>5kΩ ×2</strong></td><td>DHT20 SDA・SCL → 3.3V</td><td>I²Cの<strong>プルアップ</strong>。信号線をHIGHへ戻す。</td></tr>
+<tr><td><strong>2kΩ ×1</strong></td><td>GP18 → BC337 Base</td><td>Baseへ流れる電流を制限し、GPIOを守る。</td></tr>
+<tr><td><strong>330Ω ×1</strong></td><td>VBUS → IR LED</td><td>IR LEDへ流れる電流を約10mA級に制限。</td></tr>
+<tr><td><strong>100Ω ×1</strong></td><td>3.3V → PL-IRM1838B VCC</td><td>47µFと組み合わせ、IR受信器の電源ノイズを減らす。</td></tr></table>
+<h3>5-1. 5kΩが「電流制限」ではなくプルアップなのはなぜ？</h3><p>I²Cでは機器が信号線を主にLOWへ引き下げる。誰もLOWにしていないときは、抵抗を通して3.3V側へ引っ張り、HIGHを作る。これがプルアップ。</p>
+<div class="why"><strong>4.7kΩではなく5kΩでよい理由</strong><br>DHT20の資料で例示される4.7kΩに対し、5kΩは約6%大きいだけ。今回の短いブレッドボード配線・低速なセンサー用途では実用上ほぼ同じ範囲として扱える。</div>
+<h3>5-2. 330ΩでIR LEDにどのくらい流れる？</h3><p>VBUSを5V、IR LEDの順電圧を約1.6Vとし、まずトランジスタの電圧降下を無視すると、<span class="mono">(5 - 1.6) ÷ 330 ≒ 0.0103A</span>。つまり約10.3mA。実際はBC337にも少し電圧がかかるため、少し小さくなる。</p>
+<table><tr><th>抵抗</th><th>概算</th><th>扱い</th></tr><tr><td>330Ω</td><td>約10.3mA</td><td>最初の実験に採用</td></tr><tr><td>220Ω</td><td>約15.5mA</td><td>距離不足時の候補</td></tr><tr><td>100Ω</td><td>約34mA</td><td>初回のIR LED用には使わない</td></tr></table>
+
+<h2 id="capacitors">6. コンデンサは「電気を一時的に蓄える」</h2>
+<p>抵抗が電流を抑える部品なのに対し、コンデンサは電荷を一時的に蓄え、急な電圧変化をなだらかにする。</p>
+<h3>6-1. DHT20の0.1µF</h3><p>DHT20のVDD-GND間、できるだけセンサーの近くに置く。高周波の細かなノイズを吸収する<strong>デカップリング</strong>用。セラミックコンデンサなので極性はない。</p>
+<h3>6-2. PL-IRM1838Bの47µF</h3><p>IR受信器の電源を安定させるための比較的大きなコンデンサ。100Ωと組み合わせて、電源から来るノイズを受信器へ伝えにくくする。</p>
+<svg viewBox="0 0 900 290"><text x="450" y="38" text-anchor="middle" font-size="22">100Ω + 47µF の考え方</text><text x="70" y="145" font-size="18">3.3V</text><line x1="125" y1="140" x2="250" y2="140" stroke="#333" stroke-width="2"/><rect x="250" y="115" width="110" height="50" fill="#fff4e5" stroke="#333"/><text x="305" y="147" text-anchor="middle">100Ω</text><line x1="360" y1="140" x2="570" y2="140" stroke="#333" stroke-width="2"/><circle cx="480" cy="140" r="5" fill="#333"/><line x1="480" y1="140" x2="480" y2="195" stroke="#333"/><line x1="450" y1="195" x2="510" y2="195" stroke="#333" stroke-width="3"/><line x1="450" y1="210" x2="510" y2="210" stroke="#333"/><text x="525" y="206">47µF</text><text x="525" y="226">＋を上側</text><line x1="480" y1="210" x2="480" y2="250" stroke="#333"/><text x="445" y="270">GND</text><rect x="570" y="100" width="230" height="80" rx="10" fill="#f3efff" stroke="#333"/><text x="685" y="133" text-anchor="middle" font-size="18">PL-IRM1838B</text><text x="685" y="158" text-anchor="middle">VCC</text><line x1="570" y1="140" x2="800" y2="140" stroke="#333" opacity="0"/></svg>
+<div class="warn"><strong>電解コンデンサは極性あり</strong><br>47µFは＋と−を逆にしない。今回なら＋をVCC側、−をGND側。0.1µFセラミックは極性なし。</div>
+
+<h2 id="transistor">7. BC337-40BUは「GPIOで大きい側の電流をON/OFFするスイッチ」</h2>
+<p>GPIOからIR LEDへ直接大きな電流を流す設計にせず、GPIOはBC337のBaseを操作するだけにする。IR LEDの主電流はVBUS→330Ω→IR LED→BC337→GNDという別の経路を流れる。</p>
+<svg viewBox="0 0 980 390"><text x="490" y="42" text-anchor="middle" font-size="23">低側（Low-side）スイッチ</text>
+<text x="65" y="115" font-size="17">GP18</text><line x1="120" y1="110" x2="235" y2="110" stroke="#333" stroke-width="2"/><rect x="235" y="85" width="100" height="50" fill="#fff4e5" stroke="#333"/><text x="285" y="116" text-anchor="middle">2kΩ</text><line x1="335" y1="110" x2="445" y2="110" stroke="#333" stroke-width="2"/><text x="400" y="96">Base</text>
+<circle cx="480" cy="190" r="58" fill="#eef4ff" stroke="#333"/><text x="480" y="185" text-anchor="middle" font-size="18">BC337</text><text x="480" y="210" text-anchor="middle" font-size="14">NPN</text><line x1="445" y1="110" x2="455" y2="155" stroke="#333" stroke-width="2"/>
+<line x1="500" y1="135" x2="500" y2="75" stroke="#333" stroke-width="2"/><text x="515" y="92">Collector</text><line x1="500" y1="248" x2="500" y2="320" stroke="#333" stroke-width="2"/><text x="515" y="292">Emitter</text><text x="515" y="335">GND</text>
+<line x1="500" y1="75" x2="640" y2="75" stroke="#333" stroke-width="2"/><polygon points="705,75 665,55 665,95" fill="none" stroke="#333" stroke-width="2"/><line x1="665" y1="55" x2="665" y2="95" stroke="#333" stroke-width="2"/><text x="685" y="118" text-anchor="middle">IR LED</text><line x1="705" y1="75" x2="770" y2="75" stroke="#333"/><rect x="770" y="50" width="90" height="50" fill="#fff4e5" stroke="#333"/><text x="815" y="81" text-anchor="middle">330Ω</text><line x1="860" y1="75" x2="925" y2="75" stroke="#d88b00" stroke-width="3"/><text x="875" y="55">VBUS ≈5V</text>
+<text x="490" y="372" text-anchor="middle" font-size="15">主電流：VBUS → 330Ω → IR LED → Collector → Emitter → GND</text></svg>
+<p>BC337-40BUは平らな面を手前、足を下にして<strong>左からC-B-E</strong>。Pin 1=Collector、Pin 2=Base、Pin 3=Emitter。</p>
+<div class="why"><strong>なぜ2kΩをBaseに入れる？</strong><br>Base-Emitter間はダイオードのように電流が流れるため、GPIOを直結すると流れすぎる。2kΩでおおむね1mA程度に抑え、GPIOは「スイッチを操作する小さい電流」だけを担当する。</div>
+
+<h2 id="ir">8. 赤外線リモコンは「見えない光を高速点滅させる」</h2>
+<p>OSI5LA5A33A-Bは940nmの赤外線LED。肉眼には見えない。普通の照明の赤外線や太陽光と区別するため、リモコンは赤外線を数十kHzで高速点滅させ、その点滅のまとまりで情報を送る。</p>
+<h3>8-1. 38kHzとは</h3><p>1秒間に約38,000回の周期。1周期は約26.3µs。IR LEDをずっとONにするのではなく、この速さでON/OFFする。</p>
+<h3>8-2. MARKとSPACE</h3><p><strong>MARK</strong>は搬送波を出している時間、<strong>SPACE</strong>は出していない時間。リモコンデータは、このMARK/SPACEの長さの並びとして観察できる。</p>
+<svg viewBox="0 0 950 300"><text x="475" y="38" text-anchor="middle" font-size="22">「38kHz搬送波」と「情報」の関係</text><line x1="80" y1="105" x2="870" y2="105" stroke="#aaa"/><path d="M80 105 L92 70 L104 140 L116 70 L128 140 L140 70 L152 140 L164 70 L176 140 L188 70 L200 105 L320 105 L332 70 L344 140 L356 70 L368 140 L380 70 L392 140 L404 70 L416 140 L428 105 L600 105 L612 70 L624 140 L636 70 L648 140 L660 70 L672 140 L684 70 L696 140 L708 70 L720 105 L870 105" fill="none" stroke="#b34" stroke-width="2"/><text x="140" y="172" text-anchor="middle">MARK</text><text x="260" y="172" text-anchor="middle">SPACE</text><text x="375" y="172" text-anchor="middle">MARK</text><text x="515" y="172" text-anchor="middle">SPACE</text><text x="660" y="172" text-anchor="middle">MARK</text><text x="475" y="230" text-anchor="middle" font-size="15">MARKの内部で細かく高速点滅している</text></svg>
+<div class="note"><strong>今回まだ実測するもの</strong><br>RAS-AJ3626Sの純正リモコンRAR-8P2について、公開資料だけでは正確な搬送波周波数・通信フォーマットを確定していない。まずPL-IRM1838Bで受信できるかを調べ、実測した時間列を保存する。</div>
+
+<h2 id="receiver">9. PL-IRM1838Bは「38kHz付近の細かい点滅を消して、情報だけ出す」</h2>
+<p>PL-IRM1838Bの中心周波数は37.9kHz付近。内部で受光・増幅・フィルタ・復調を行うため、Pico側は38kHzそのものを1周期ずつ測る必要がない。</p>
+<svg viewBox="0 0 950 240"><rect x="55" y="75" width="230" height="90" rx="10" fill="#fff4e5" stroke="#333"/><text x="170" y="108" text-anchor="middle" font-size="18">純正リモコン</text><text x="170" y="135" text-anchor="middle">38kHz付近の赤外線</text><rect x="360" y="75" width="230" height="90" rx="10" fill="#f3efff" stroke="#333"/><text x="475" y="108" text-anchor="middle" font-size="18">PL-IRM1838B</text><text x="475" y="135" text-anchor="middle">復調</text><rect x="665" y="75" width="230" height="90" rx="10" fill="#eaf4ff" stroke="#333"/><text x="780" y="108" text-anchor="middle" font-size="18">Pico GP16</text><text x="780" y="135" text-anchor="middle">MARK/SPACEの時間</text><line x1="285" y1="120" x2="360" y2="120" stroke="#333"/><line x1="590" y1="120" x2="665" y2="120" stroke="#333"/></svg>
+<p>受信出力は一般に<strong>active-low</strong>。赤外線搬送波を検出している区間でOUTがLOW側になる。したがって「HIGH=赤外線あり」と思い込まない。</p>
+
+<h2 id="i2c">10. I²CとDHT20</h2>
+<h3>10-1. I²Cとは</h3><p>複数のデジタル機器を、主に<strong>SDA（データ）</strong>と<strong>SCL（クロック）</strong>の2本で接続する通信方式。GNDと電源も必要なので、DHT20への物理配線は合計4系統になる。</p>
+<h3>10-2. DHT20の端子</h3><table><tr><th>Pin</th><th>名称</th><th>接続</th></tr><tr><td>1</td><td>VDD</td><td>3.3V</td></tr><tr><td>2</td><td>SDA</td><td>GP4 + 5kΩで3.3Vへプルアップ</td></tr><tr><td>3</td><td>GND</td><td>GND</td></tr><tr><td>4</td><td>SCL</td><td>GP5 + 5kΩで3.3Vへプルアップ</td></tr></table>
+<p>DHT20のI²Cアドレスは<span class="mono">0x38</span>。I²Cスキャンで0x38が見えれば、配線・電源・I²C通信の基本部分が成立していると判断できる。</p>
+<svg viewBox="0 0 940 360"><text x="470" y="38" text-anchor="middle" font-size="22">DHT20の基本配線</text><text x="80" y="90">3.3V</text><line x1="130" y1="85" x2="710" y2="85" stroke="#c44" stroke-width="3"/><rect x="650" y="135" width="210" height="160" rx="12" fill="#ebf8ef" stroke="#333"/><text x="755" y="170" text-anchor="middle" font-size="20">DHT20</text><text x="680" y="205">1 VDD</text><text x="680" y="235">2 SDA</text><text x="680" y="265">3 GND</text><text x="680" y="295">4 SCL</text><line x1="710" y1="85" x2="710" y2="205" stroke="#c44"/><line x1="650" y1="235" x2="420" y2="235" stroke="#333"/><text x="335" y="240">GP4 SDA</text><line x1="650" y1="295" x2="420" y2="295" stroke="#333"/><text x="335" y="300">GP5 SCL</text><line x1="520" y1="85" x2="520" y2="235" stroke="#333"/><rect x="495" y="140" width="50" height="70" fill="#fff4e5" stroke="#333"/><text x="520" y="180" text-anchor="middle" transform="rotate(-90 520 180)">5kΩ</text><line x1="600" y1="85" x2="600" y2="295" stroke="#333"/><rect x="575" y="160" width="50" height="70" fill="#fff4e5" stroke="#333"/><text x="600" y="200" text-anchor="middle" transform="rotate(-90 600 200)">5kΩ</text><line x1="650" y1="265" x2="650" y2="330" stroke="#333"/><text x="620" y="350">GND</text><line x1="760" y1="85" x2="760" y2="120" stroke="#333"/><line x1="735" y1="120" x2="785" y2="120" stroke="#333" stroke-width="3"/><line x1="735" y1="134" x2="785" y2="134" stroke="#333"/><text x="795" y="132">0.1µF</text><line x1="760" y1="134" x2="760" y2="135" stroke="#333"/></svg>
+<div class="why"><strong>なぜI²Cにプルアップが必要？</strong><br>I²Cは各機器が線を積極的にHIGHへ押し上げる方式ではなく、主にLOWへ引き下げて通信する。そのため、誰もLOWにしていないときにHIGHへ戻す役目を5kΩ抵抗が持つ。</div>
+
+<h2 id="switch">11. タクトスイッチと内部プルアップ</h2>
+<p>タクトスイッチはGP15とGNDの間につなぎ、Pico内部のプルアップ抵抗を有効にする。</p>
+<table><tr><th>状態</th><th>GP15</th><th>意味</th></tr><tr><td>押していない</td><td>HIGH</td><td>内部抵抗が3.3V側へ引っ張る</td></tr><tr><td>押した</td><td>LOW</td><td>スイッチでGNDへ直結される</td></tr></table>
+<p>ここではPico内部にプルアップがあるため、外付け抵抗を1本増やす必要がない。</p>
+
+<h2 id="software">12. 回路とソフトウェアはどう対応するか</h2>
+<table><tr><th>回路側</th><th>ソフト側</th><th>役割</th></tr><tr><td>DHT20 / SDA・SCL</td><td>I²C</td><td>温度・湿度を読む</td></tr><tr><td>PL-IRM1838B / GP16</td><td>GPIO入力・エッジ時刻</td><td>MARK/SPACEの長さを測る</td></tr><tr><td>BC337 / GP18</td><td>PWM</td><td>38kHz前後の搬送波を作る</td></tr><tr><td>タクトスイッチ / GP15</td><td>GPIO入力 + PULL_UP</td><td>手動送信のきっかけ</td></tr><tr><td>USB</td><td>シリアル出力</td><td>LCDなしで値・状態を見る</td></tr></table>
+<h3>12-1. PWM</h3><p>GPIOをソフトで1回ずつHIGH/LOWする代わりに、ハードウェア機能で一定周期の矩形波を出す。38kHz付近の搬送波生成に向く。</p>
+<h3>12-2. PIO</h3><p>PicoにはGPIOタイミング処理を専用ハードウェアへ任せられるPIOがある。長いエアコン信号をµs単位で正確に再現するとき、通常のMicroPythonループより安定させやすい。</p>
+
+<h2 id="experiment">13. 実験は「何が分かったか」を1段ずつ切り分ける</h2>
+<table><tr><th>段階</th><th>実験</th><th>成功すると何が分かる？</th></tr>
+<tr><td>1</td><td>Pico単体をUSB接続</td><td>MicroPythonとPC通信が動く</td></tr>
+<tr><td>2</td><td>PL-IRM1838Bだけ接続</td><td>RAR-8P2の赤外線を38kHz受信器で観測できるか</td></tr>
+<tr><td>3</td><td>複数ボタンのMARK/SPACEを保存</td><td>操作ごとに信号列がどう変わるか</td></tr>
+<tr><td>4</td><td>BC337 + IR LEDで38kHz送信</td><td>送信回路そのものが動く</td></tr>
+<tr><td>5</td><td>記録波形を再送</td><td>エアコンを自作回路から操作できるか</td></tr>
+<tr><td>6</td><td>DHT20のI²C scan</td><td>0x38が見え、I²C配線が成立</td></tr>
+<tr><td>7</td><td>温湿度を読み出す</td><td>センサー値を制御判断へ使える</td></tr>
+<tr><td>8</td><td>ボタン統合</td><td>手動操作と自動処理をまとめられる</td></tr></table>
+<div class="ok"><strong>切り分けが重要</strong><br>全部を最初から接続すると、動かなかったときに原因が分からない。電源→受信→送信→センサー→統合の順で進めると、故障箇所を限定できる。</div>
+
+<h2 id="safety">14. 壊さないために覚える原則</h2>
+<ol>
+<li>配線を変えるときはUSB電源を抜く。</li>
+<li>3.3VとGNDを直接つながない。</li>
+<li>VBUS約5VをGPIOへ入れない。</li>
+<li>LEDには必ず電流制限抵抗を入れる。</li>
+<li>BC337のC-B-Eを確認する。</li>
+<li>47µF電解コンデンサの＋/−を逆にしない。</li>
+<li>すべてのGNDを共通にする。</li>
+<li>最初は安全側の330ΩでIR LEDを試す。</li>
+<li>DHT20のSDA/SCLプルアップと0.1µFを忘れない。</li>
+</ol>
+
+<h2 id="glossary">15. 用語集</h2>
+<table><tr><th>用語</th><th>意味</th></tr><tr><td>GPIO</td><td>プログラムからHIGH/LOWの入出力などを制御できる端子。</td></tr><tr><td>HIGH / LOW</td><td>デジタル信号の2状態。今回のGPIOではおおむね3.3V側 / 0V側。</td></tr><tr><td>プルアップ</td><td>信号が誰にも駆動されていないとき、抵抗でHIGH側へ保つ。</td></tr><tr><td>I²C</td><td>SDAとSCLを共有して複数機器と通信する方式。</td></tr><tr><td>PWM</td><td>一定周期でON/OFFを繰り返す信号をハードウェアで生成する機能。</td></tr><tr><td>デカップリング</td><td>部品の近くにコンデンサを置き、電源ノイズや瞬間的変動を抑える。</td></tr><tr><td>トランジスタ</td><td>小さい信号で別の電流経路を制御できる半導体部品。</td></tr><tr><td>Collector / Base / Emitter</td><td>今回使うNPNトランジスタBC337の3端子。</td></tr><tr><td>搬送波</td><td>情報を運ぶための高速な周期信号。今回まず試すのは約38kHz。</td></tr><tr><td>MARK / SPACE</td><td>赤外線搬送波を出している区間 / 出していない区間。</td></tr><tr><td>復調</td><td>高速な搬送波から情報部分を取り出すこと。</td></tr></table>
+
+<h2 id="quiz">16. 確認問題</h2>
+<div class="quiz">
+<details><summary>Q1. Picoに約5VのVBUSがあるのに、なぜGPIOへ5Vを入れてはいけない？</summary><p>VBUSは電源端子であり、GPIOの信号電圧仕様とは別だから。GPIOは3.3V系として扱う。</p></details>
+<details><summary>Q2. DHT20のSDAとSCLに5kΩを入れる目的は？</summary><p>I²Cの信号線を、誰もLOWへ引き下げていないときに3.3VのHIGHへ戻すプルアップ。</p></details>
+<details><summary>Q3. IR LEDの330Ωは何のため？</summary><p>IR LEDへ流れる電流を制限し、LEDや回路への負担を抑えるため。</p></details>
+<details><summary>Q4. なぜIR LEDをGPIOへ直接つながずBC337を使う？</summary><p>GPIOはBC337のBaseだけを小電流で操作し、IR LED側の主電流を別経路でON/OFFするため。</p></details>
+<details><summary>Q5. 0.1µFと47µFは同じ役割？</summary><p>どちらも電源安定化に関係するが、0.1µFはDHT20近傍の高周波ノイズ対策、47µFはPL-IRM1838B電源側でより大きな変動を抑える用途。47µF電解には極性がある。</p></details>
+<details><summary>Q6. PL-IRM1838Bがあると、Picoは38kHzの1周期ずつを測る必要がある？</summary><p>基本的には不要。PL-IRM1838Bが搬送波を復調し、Picoは主にMARK/SPACEの時間列を受け取る。</p></details>
+<details><summary>Q7. 今回「38kHz」と言い切ってよい？</summary><p>送信実験の最初の値としては使うが、RAR-8P2の正確な搬送波は実機確認対象。PL-IRM1838Bで受信できるか、再送で動作するかを実験する。</p></details>
+<details><summary>Q8. 全部一度につないで試さない方がよい理由は？</summary><p>失敗したときに原因を特定しにくくなるから。受信、送信、DHT20、ボタンを個別に確認してから統合する。</p></details>
+</div>
+
+<h2>参考資料</h2>
+<ul class="small">
+<li>Raspberry Pi Ltd.「Raspberry Pi Pico 2 W Datasheet」</li>
+<li>Aosong / ASAIR「DHT20 Data Sheet」</li>
+<li>Para Light Electronics「PL-IRM1838B Data Sheet」</li>
+<li>OptoSupply「OSI5LA5A33A-B Data Sheet」</li>
+<li>Fairchild / ON Semiconductor「BC337/338 Datasheet」</li>
+</ul>
+<p class="small">この座学編は回路の原理理解用。実際の穴位置・物理ピン位置・作業順は「第一部 自由研究資料」のブレッドボード配線編を使用する。</p>
+</main></body></html>
