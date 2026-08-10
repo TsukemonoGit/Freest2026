@@ -1,0 +1,94 @@
+name: Update TOC
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '**/*.html'
+      - '.github/workflows/update-toc.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update-toc:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Generate TOC
+        run: |
+          python3 - <<'EOF'
+          import os
+          import re
+
+          REPO = os.environ["GITHUB_REPOSITORY"]  # owner/repo
+          OWNER, NAME = REPO.split("/")
+          BASE_URL = f"https://{OWNER}.github.io/{NAME}"
+
+          html_files = []
+          for root, dirs, files in os.walk("."):
+              # .git・.github は除外
+              dirs[:] = [d for d in dirs if d not in (".git", ".github")]
+              for f in files:
+                  if f.lower().endswith(".html"):
+                      path = os.path.relpath(os.path.join(root, f), ".")
+                      html_files.append(path)
+
+          html_files.sort()
+
+          def get_title(path):
+              try:
+                  with open(path, encoding="utf-8", errors="ignore") as fp:
+                      content = fp.read()
+                  m = re.search(r"<title>(.*?)</title>", content, re.IGNORECASE | re.DOTALL)
+                  if m:
+                      return m.group(1).strip()
+              except Exception:
+                  pass
+              return os.path.basename(path)
+
+          lines = []
+          for path in html_files:
+              title = get_title(path)
+              url_path = path.replace(os.sep, "/")
+              url = f"{BASE_URL}/{url_path}"
+              lines.append(f"- [{title}]({url})")
+
+          toc = "\n".join(lines) if lines else "（HTMLファイルなし）"
+
+          with open("README.md", encoding="utf-8") as fp:
+              readme = fp.read()
+
+          start_marker = "<!-- TOC:START -->"
+          end_marker = "<!-- TOC:END -->"
+
+          if start_marker not in readme or end_marker not in readme:
+              # マーカーが無い場合は末尾に追加
+              readme = readme.rstrip() + f"\n\n## 目次\n{start_marker}\n{toc}\n{end_marker}\n"
+          else:
+              pattern = re.compile(
+                  re.escape(start_marker) + r".*?" + re.escape(end_marker),
+                  re.DOTALL
+              )
+              replacement = f"{start_marker}\n{toc}\n{end_marker}"
+              readme = pattern.sub(replacement, readme)
+
+          with open("README.md", "w", encoding="utf-8") as fp:
+              fp.write(readme)
+          EOF
+
+      - name: Commit changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add README.md
+          if git diff --cached --quiet; then
+            echo "変更なし"
+          else
+            git commit -m "docs: update TOC in README"
+            git push
+          fi
