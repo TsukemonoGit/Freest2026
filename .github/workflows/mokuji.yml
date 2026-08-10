@@ -6,7 +6,7 @@ on:
       - main
     paths:
       - '**/*.html'
-      - '.github/workflows/update-toc.yml'
+      - '.github/workflows/mokuji.yml'
   workflow_dispatch:
 
 permissions:
