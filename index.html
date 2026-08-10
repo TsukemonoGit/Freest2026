@@ -4,42 +4,123 @@ title: "第一部 自由研究資料 Pico 2 WHでつくる赤外線エアコンI
 ---
 
 <h1>第一部　Raspberry Pi Pico 2 WHでつくる赤外線エアコンIoT</h1>
-<p>この資料では、Raspberry Pi Pico 2 WHを中心に、赤外線受信・赤外線送信・温湿度測定・タクトスイッチを組み合わせ、対象エアコン <strong>日立 白くまくん RAS-AJ3626S</strong> の純正リモコン信号を学習して再送信できる装置を作る。電子工作の経験がほとんどない状態からでも、「何をどこへつなぐか」「なぜその部品が必要か」「何を確認すれば成功か」が分かる順番で進める。</p>
+<p>
+  この資料では、Raspberry Pi Pico 2
+  WHを中心に、赤外線受信・赤外線送信・温湿度測定・タクトスイッチを組み合わせ、対象エアコン
+  <strong>日立 白くまくん RAS-AJ3626S</strong>
+  の純正リモコン信号を学習して再送信できる装置を作る。電子工作の経験がほとんどない状態からでも、「何をどこへつなぐか」「なぜその部品が必要か」「何を確認すれば成功か」が分かる順番で進める。
+</p>
 
-<a href="zagaku.html">→座学</a>
 <a href="./yaritai/page1.html">→やりたい</a>
 <h2>1. 研究の目的</h2>
-<p>家にあるELEGOO Arduino UNO R3スターターキットの部品をできるだけ再利用し、不足する部品だけを追加購入して、エアコンを赤外線で操作できるIoT装置を作る。</p>
-<p>第1部ではPico 2 WH単体で、赤外線信号の受信・保存・再送信、DHT20による温湿度測定、タクトスイッチによる手動操作まで完成させる。画面は付けない。動作確認はUSBシリアル出力で行う。第2部ではPico 2 WHのWi-Fiを使い、Raspberry Pi 4Bなどのサーバー側から命令を送る構成へ発展させる。</p>
+<p>
+  家にあるELEGOO Arduino UNO
+  R3スターターキットの部品をできるだけ再利用し、不足する部品だけを追加購入して、エアコンを赤外線で操作できるIoT装置を作る。
+</p>
+<p>
+  第1部ではPico 2
+  WH単体で、赤外線信号の受信・保存・再送信、DHT20による温湿度測定、タクトスイッチによる手動操作まで完成させる。画面は付けない。動作確認はUSBシリアル出力で行う。第2部ではPico
+  2 WHのWi-Fiを使い、Raspberry Pi
+  4Bなどのサーバー側から命令を送る構成へ発展させる。
+</p>
 
 <h2>2. 今回の構成</h2>
 <table>
-<tr><th>部品</th><th>入手方法</th><th>役割</th></tr>
-<tr><td>Raspberry Pi Pico 2 WH</td><td>購入</td><td>GPIO制御、I²C、赤外線処理、Wi-Fi通信を担当する中心装置</td></tr>
-<tr><td>PL-IRM1838B</td><td>購入</td><td>約38kHzで変調された赤外線リモコン信号を受信・復調する</td></tr>
-<tr><td>DHT20</td><td>購入</td><td>I²Cで温度・湿度を測定する</td></tr>
-<tr><td>OSI5LA5A33A-B 940nm IR LED</td><td>購入</td><td>エアコンへ赤外線を送信する</td></tr>
-<tr><td>BC337-40BU（秋月 105998）</td><td>購入</td><td>IR LEDに流す電流をON/OFFするNPNトランジスタ。ON Semiconductor品。TO-92、最大コレクタ電流800mA</td></tr>
-<tr><td>タクトスイッチ</td><td>ELEGOOキット</td><td>手動で赤外線送信を実行する</td></tr>
-<tr><td>2kΩ・5kΩ・330Ω・100Ωなどの抵抗</td><td>ELEGOOキット</td><td>I²Cのプルアップ、トランジスタのベース電流、IR LED電流の調整に使う</td></tr>
-<tr><td>0.1µF セラミックコンデンサ（秋月 110147）</td><td>購入</td><td>DHT20のVDD-GND間のデカップリング</td></tr>
-<tr><td>47µF 電解コンデンサ（秋月 117887）</td><td>購入</td><td>PL-IRM1838Bの電源フィルタ。＋/−の極性あり</td></tr>
-<tr><td>ブレッドボード・ジャンパ線</td><td>ELEGOOキット</td><td>はんだ付けせず回路を組む</td></tr>
+  <tr>
+    <th>部品</th>
+    <th>入手方法</th>
+    <th>役割</th>
+  </tr>
+  <tr>
+    <td>Raspberry Pi Pico 2 WH</td>
+    <td>購入</td>
+    <td>GPIO制御、I²C、赤外線処理、Wi-Fi通信を担当する中心装置</td>
+  </tr>
+  <tr>
+    <td>PL-IRM1838B</td>
+    <td>購入</td>
+    <td>約38kHzで変調された赤外線リモコン信号を受信・復調する</td>
+  </tr>
+  <tr>
+    <td>DHT20</td>
+    <td>購入</td>
+    <td>I²Cで温度・湿度を測定する</td>
+  </tr>
+  <tr>
+    <td>OSI5LA5A33A-B 940nm IR LED</td>
+    <td>購入</td>
+    <td>エアコンへ赤外線を送信する</td>
+  </tr>
+  <tr>
+    <td>BC337-40BU（秋月 105998）</td>
+    <td>購入</td>
+    <td>
+      IR LEDに流す電流をON/OFFするNPNトランジスタ。ON
+      Semiconductor品。TO-92、最大コレクタ電流800mA
+    </td>
+  </tr>
+  <tr>
+    <td>タクトスイッチ</td>
+    <td>ELEGOOキット</td>
+    <td>手動で赤外線送信を実行する</td>
+  </tr>
+  <tr>
+    <td>2kΩ・5kΩ・330Ω・100Ωなどの抵抗</td>
+    <td>ELEGOOキット</td>
+    <td>I²Cのプルアップ、トランジスタのベース電流、IR LED電流の調整に使う</td>
+  </tr>
+  <tr>
+    <td>0.1µF セラミックコンデンサ（秋月 110147）</td>
+    <td>購入</td>
+    <td>DHT20のVDD-GND間のデカップリング</td>
+  </tr>
+  <tr>
+    <td>47µF 電解コンデンサ（秋月 117887）</td>
+    <td>購入</td>
+    <td>PL-IRM1838Bの電源フィルタ。＋/−の極性あり</td>
+  </tr>
+  <tr>
+    <td>ブレッドボード・ジャンパ線</td>
+    <td>ELEGOOキット</td>
+    <td>はんだ付けせず回路を組む</td>
+  </tr>
 </table>
-<div class="note"><strong>部品を変更した理由</strong><br>最初はELEGOO付属のDHT11モジュールとIR受信モジュールを使う予定だった。しかし、Arduino UNOは5V系、Pico 2 WHのGPIOは3.3V系なので、5V信号をPicoへ直接入力しないための電圧変換が必要になる。そこで、3.3Vで扱いやすいDHT20とPL-IRM1838Bへ変更した。IR送信側のトランジスタは、メーカーと足順を確定できるBC337-40BU（秋月105998）を購入して使う。抵抗はELEGOOキットのものを再利用する。</div>
-<div class="ok"><strong>DHT20（秋月116732）の外付け部品は確定</strong><br>秋月116732はDHT20本体を「モジュール」として販売しているもので、抵抗・コンデンサ付きの別基板ではない。メーカー標準回路に従い、SDAとSCLには外付けプルアップ抵抗を1本ずつ入れる。代表値4.7kΩに対し、今回は手元の5kΩをSDA用・SCL用に各1本使う。またVDD-GND間には0.1µF（100nF）のセラミックコンデンサを1個入れ、DHT20のできるだけ近くへ置く。</div>
+<div class="note">
+  <strong>部品を変更した理由</strong
+  ><br />最初はELEGOO付属のDHT11モジュールとIR受信モジュールを使う予定だった。しかし、Arduino
+  UNOは5V系、Pico 2
+  WHのGPIOは3.3V系なので、5V信号をPicoへ直接入力しないための電圧変換が必要になる。そこで、3.3Vで扱いやすいDHT20とPL-IRM1838Bへ変更した。IR送信側のトランジスタは、メーカーと足順を確定できるBC337-40BU（秋月105998）を購入して使う。抵抗はELEGOOキットのものを再利用する。
+</div>
+<div class="ok">
+  <strong>DHT20（秋月116732）の外付け部品は確定</strong
+  ><br />秋月116732はDHT20本体を「モジュール」として販売しているもので、抵抗・コンデンサ付きの別基板ではない。メーカー標準回路に従い、SDAとSCLには外付けプルアップ抵抗を1本ずつ入れる。代表値4.7kΩに対し、今回は手元の5kΩをSDA用・SCL用に各1本使う。またVDD-GND間には0.1µF（100nF）のセラミックコンデンサを1個入れ、DHT20のできるだけ近くへ置く。
+</div>
 
 <h2>3. 完成後の流れ</h2>
 {% include svg/svg_index_flow.html %}
 
 <h2>4. 電子工作の最低限の基礎</h2>
 <h3>4-1. 3.3V、5V、GPIOは同じものではない</h3>
-<p>Pico 2 WHには3.3V電源出力があり、USB給電時にはVBUSに約5Vが来る。しかしGPIOの信号レベルは3.3Vで固定されている。したがって、5Vを電源として使える場合でも、5V信号をGPIOへ直接入力してはいけない。</p><div class="note"><strong>VBUSを使えるのはUSBから5Vが入っているとき</strong><br>今回のIR LED回路はPicoをUSBで給電している間、Pin 40 VBUSを約5V電源として使う。将来USBを外してVSYSなど別の方法で給電する構成に変える場合は、VBUSをIR LED電源として使えるとは限らないため、電源回路を再確認する。</div>
+<p>
+  Pico 2
+  WHには3.3V電源出力があり、USB給電時にはVBUSに約5Vが来る。しかしGPIOの信号レベルは3.3Vで固定されている。したがって、5Vを電源として使える場合でも、5V信号をGPIOへ直接入力してはいけない。
+</p>
+<div class="note">
+  <strong>VBUSを使えるのはUSBから5Vが入っているとき</strong><br />今回のIR
+  LED回路はPicoをUSBで給電している間、Pin 40
+  VBUSを約5V電源として使う。将来USBを外してVSYSなど別の方法で給電する構成に変える場合は、VBUSをIR
+  LED電源として使えるとは限らないため、電源回路を再確認する。
+</div>
 {% include svg/svg_index_voltage.html %}
 <h3>4-2. GNDを共通にする</h3>
-<p>GNDは電圧を測る基準の0Vである。Pico、センサー、トランジスタが同じHIGH/LOWを理解するため、すべてのGNDを共通につなぐ。</p>
+<p>
+  GNDは電圧を測る基準の0Vである。Pico、センサー、トランジスタが同じHIGH/LOWを理解するため、すべてのGNDを共通につなぐ。
+</p>
 <h3>4-3. 抵抗を入れる理由</h3>
-<p>抵抗は電流を制限する。IR LEDへ抵抗なしで電源をつなぐと大きすぎる電流が流れる可能性がある。またBC337-40BUのBASEにも抵抗を入れ、GPIOから流れる電流を制限する。</p>
+<p>
+  抵抗は電流を制限する。IR
+  LEDへ抵抗なしで電源をつなぐと大きすぎる電流が流れる可能性がある。またBC337-40BUのBASEにも抵抗を入れ、GPIOから流れる電流を制限する。
+</p>
 
 <h2>5. Pico 2 WHの使用ピン</h2>
 {% include tables/pin.html %}
@@ -48,76 +129,263 @@ title: "第一部 自由研究資料 Pico 2 WHでつくる赤外線エアコンI
 {% include svg/svg_index_pinout.html %}
 
 <h3>5-2. 今回使う抵抗・コンデンサの早見表</h3>
-<table><tr><th>部品</th><th>値</th><th>接続場所</th><th>何のためか</th></tr>
-<tr><td>抵抗</td><td><strong>5kΩ ×2</strong></td><td>DHT20のSDA→3.3V、SCL→3.3V</td><td>I²Cの信号線をHIGHへ戻す外付けプルアップ。今回のDHT20では2本とも使用する。</td></tr>
-<tr><td>コンデンサ</td><td><strong>0.1µF ×1</strong></td><td>DHT20のVDD-GND間</td><td>電源の細かな揺れ・高周波ノイズを吸収する。</td></tr>
-<tr><td>抵抗</td><td><strong>100Ω ×1</strong></td><td>3.3V→PL-IRM1838B VCCの直前</td><td>メーカー推奨の47〜100Ω電源フィルタ。手元の100Ωを使用する。</td></tr>
-<tr><td>電解コンデンサ</td><td><strong>47µF ×1</strong></td><td>PL-IRM1838B側VCC-GND間</td><td>受信モジュールの電源ノイズを減らす。秋月117887を購入して使用する。</td></tr>
-<tr><td>抵抗</td><td><strong>2kΩ ×1</strong></td><td>Pico GP18→BC337-40BU BASE（Pin 2）</td><td>GPIOからBASEへ流れる電流をおおむね1mA程度に制限し、トランジスタをスイッチとして駆動する。</td></tr>
-<tr><td>抵抗</td><td><strong>330Ω ×1</strong></td><td>VBUS→抵抗→IR LED</td><td>IR LED電流を最初は約10mA級に制限する。</td></tr>
-<tr><td>抵抗</td><td>100Ω</td><td>PL-IRM1838Bの電源フィルタに使用。IR LED直列には使わない</td><td>IR LEDへ使うと上限寄りの概算で約34mAまで増えるため、初回のLED駆動には330Ωを使う。</td></tr></table>
-<p>同じ「抵抗」でも役割は異なる。5kΩは信号線の状態を決める<strong>プルアップ抵抗</strong>、2kΩはトランジスタBASEへ流れる電流を抑える<strong>ベース抵抗</strong>、330ΩはIR LEDを守る<strong>電流制限抵抗</strong>である。値だけでなく「どこに何の目的で入れるか」を区別する。</p>
+<table>
+  <tr>
+    <th>部品</th>
+    <th>値</th>
+    <th>接続場所</th>
+    <th>何のためか</th>
+  </tr>
+  <tr>
+    <td>抵抗</td>
+    <td><strong>5kΩ ×2</strong></td>
+    <td>DHT20のSDA→3.3V、SCL→3.3V</td>
+    <td>
+      I²Cの信号線をHIGHへ戻す外付けプルアップ。今回のDHT20では2本とも使用する。
+    </td>
+  </tr>
+  <tr>
+    <td>コンデンサ</td>
+    <td><strong>0.1µF ×1</strong></td>
+    <td>DHT20のVDD-GND間</td>
+    <td>電源の細かな揺れ・高周波ノイズを吸収する。</td>
+  </tr>
+  <tr>
+    <td>抵抗</td>
+    <td><strong>100Ω ×1</strong></td>
+    <td>3.3V→PL-IRM1838B VCCの直前</td>
+    <td>メーカー推奨の47〜100Ω電源フィルタ。手元の100Ωを使用する。</td>
+  </tr>
+  <tr>
+    <td>電解コンデンサ</td>
+    <td><strong>47µF ×1</strong></td>
+    <td>PL-IRM1838B側VCC-GND間</td>
+    <td>受信モジュールの電源ノイズを減らす。秋月117887を購入して使用する。</td>
+  </tr>
+  <tr>
+    <td>抵抗</td>
+    <td><strong>2kΩ ×1</strong></td>
+    <td>Pico GP18→BC337-40BU BASE（Pin 2）</td>
+    <td>
+      GPIOからBASEへ流れる電流をおおむね1mA程度に制限し、トランジスタをスイッチとして駆動する。
+    </td>
+  </tr>
+  <tr>
+    <td>抵抗</td>
+    <td><strong>330Ω ×1</strong></td>
+    <td>VBUS→抵抗→IR LED</td>
+    <td>IR LED電流を最初は約10mA級に制限する。</td>
+  </tr>
+  <tr>
+    <td>抵抗</td>
+    <td>100Ω</td>
+    <td>PL-IRM1838Bの電源フィルタに使用。IR LED直列には使わない</td>
+    <td>
+      IR
+      LEDへ使うと上限寄りの概算で約34mAまで増えるため、初回のLED駆動には330Ωを使う。
+    </td>
+  </tr>
+</table>
+<p>
+  同じ「抵抗」でも役割は異なる。5kΩは信号線の状態を決める<strong>プルアップ抵抗</strong>、2kΩはトランジスタBASEへ流れる電流を抑える<strong>ベース抵抗</strong>、330ΩはIR
+  LEDを守る<strong>電流制限抵抗</strong>である。値だけでなく「どこに何の目的で入れるか」を区別する。
+</p>
 <h2>6. ブレッドボード全体配置</h2>
-<p>Pico 2 WHはブレッドボード中央の溝をまたぐように挿す。片側にDHT20とIR受信、反対側にIR送信回路とボタンを置くと配線を追いやすい。</p>
+<p>
+  Pico 2
+  WHはブレッドボード中央の溝をまたぐように挿す。片側にDHT20とIR受信、反対側にIR送信回路とボタンを置くと配線を追いやすい。
+</p>
 {% include svg/svg_index_breadboard.html %}
 
 <h2>7. DHT20の詳細配線</h2>
-<p>DHT20はI²C通信を使う。SDAがデータ線、SCLがクロック線である。I²Cでは信号線を部品が直接HIGHへ押し上げるのではなく、LOWだけを作り、HIGHはプルアップ抵抗で作る。このためSDAとSCLそれぞれに数kΩ程度の抵抗を3.3Vへつなぐ。DHT20のデータシート例は4.7kΩだが、4.7kΩと5kΩの差は約6%なので、今回の短いブレッドボード配線では手元の5kΩを使う。</p>
+<p>
+  DHT20はI²C通信を使う。SDAがデータ線、SCLがクロック線である。I²Cでは信号線を部品が直接HIGHへ押し上げるのではなく、LOWだけを作り、HIGHはプルアップ抵抗で作る。このためSDAとSCLそれぞれに数kΩ程度の抵抗を3.3Vへつなぐ。DHT20のデータシート例は4.7kΩだが、4.7kΩと5kΩの差は約6%なので、今回の短いブレッドボード配線では手元の5kΩを使う。
+</p>
 {% include svg/svg_index_dht20.html %}
-<table><tr><th>DHT20</th><th>Pico 2 WH</th><th>理由</th></tr><tr><td>Pin 1 VDD</td><td>3V3(OUT) Pin 36</td><td>3.3VはDHT20の2.2〜5.5V動作範囲内。</td></tr><tr><td>Pin 2 SDA</td><td>GP4 Pin 6</td><td>I²Cのデータ線。</td></tr><tr><td>Pin 3 GND</td><td>GND</td><td>共通の0V基準。</td></tr><tr><td>Pin 4 SCL</td><td>GP5 Pin 7</td><td>I²Cのクロック線。</td></tr><tr><td>5kΩ×2</td><td>SDA→3.3V、SCL→3.3V</td><td>I²C信号をHIGHへ戻すプルアップ。データシート例4.7kΩの代わりに手元の5kΩを使う。</td></tr><tr><td>0.1µF</td><td>VDD-GND間</td><td>電源ノイズを吸収する。</td></tr></table>
+<table>
+  <tr>
+    <th>DHT20</th>
+    <th>Pico 2 WH</th>
+    <th>理由</th>
+  </tr>
+  <tr>
+    <td>Pin 1 VDD</td>
+    <td>3V3(OUT) Pin 36</td>
+    <td>3.3VはDHT20の2.2〜5.5V動作範囲内。</td>
+  </tr>
+  <tr>
+    <td>Pin 2 SDA</td>
+    <td>GP4 Pin 6</td>
+    <td>I²Cのデータ線。</td>
+  </tr>
+  <tr>
+    <td>Pin 3 GND</td>
+    <td>GND</td>
+    <td>共通の0V基準。</td>
+  </tr>
+  <tr>
+    <td>Pin 4 SCL</td>
+    <td>GP5 Pin 7</td>
+    <td>I²Cのクロック線。</td>
+  </tr>
+  <tr>
+    <td>5kΩ×2</td>
+    <td>SDA→3.3V、SCL→3.3V</td>
+    <td>
+      I²C信号をHIGHへ戻すプルアップ。データシート例4.7kΩの代わりに手元の5kΩを使う。
+    </td>
+  </tr>
+  <tr>
+    <td>0.1µF</td>
+    <td>VDD-GND間</td>
+    <td>電源ノイズを吸収する。</td>
+  </tr>
+</table>
 
 <h3>7-1. なぜ5kΩでよいのか</h3>
-<p>I²Cのプルアップ抵抗は「4.7kΩでなければ動かない」というものではない。小さすぎるとLOWへ下げるときの電流が増え、大きすぎるとHIGHへ戻る速度が遅くなる。今回は配線が短く、手元の5kΩがデータシート例の4.7kΩに近いため5kΩを使う。</p>
+<p>
+  I²Cのプルアップ抵抗は「4.7kΩでなければ動かない」というものではない。小さすぎるとLOWへ下げるときの電流が増え、大きすぎるとHIGHへ戻る速度が遅くなる。今回は配線が短く、手元の5kΩがデータシート例の4.7kΩに近いため5kΩを使う。
+</p>
 {% include tables/dht20-pullup.html %}
 <h3>7-2. 0.1µFコンデンサは何をしているのか</h3>
-<p>抵抗が電流の流れ方を決める部品なのに対し、コンデンサは一時的に電気をためたり放したりできる。DHT20が測定や通信をするときに生じる短い電源の揺れやノイズを吸収するため、0.1µFコンデンサをVDDとGNDのすぐ近くへつなぐ。</p>
+<p>
+  抵抗が電流の流れ方を決める部品なのに対し、コンデンサは一時的に電気をためたり放したりできる。DHT20が測定や通信をするときに生じる短い電源の揺れやノイズを吸収するため、0.1µFコンデンサをVDDとGNDのすぐ近くへつなぐ。
+</p>
 {% include svg/svg_index_cap.html %}
-<div class="note"><strong>今回のDHT20配線は確定</strong><br>SDA→3.3Vに5kΩを1本、SCL→3.3Vに5kΩを1本、VDD-GND間に0.1µFを1個入れる。DHT20のメーカー資料では、外付けプルアップ抵抗（例4.7kΩ）を使うことと、VDD-GND間へ100nFのデカップリングコンデンサをセンサーの近くに置くことが示されている。</div>
+<div class="note">
+  <strong>今回のDHT20配線は確定</strong
+  ><br />SDA→3.3Vに5kΩを1本、SCL→3.3Vに5kΩを1本、VDD-GND間に0.1µFを1個入れる。DHT20のメーカー資料では、外付けプルアップ抵抗（例4.7kΩ）を使うことと、VDD-GND間へ100nFのデカップリングコンデンサをセンサーの近くに置くことが示されている。
+</div>
 <h2>8. PL-IRM1838Bの詳細配線</h2>
-<p>PL-IRM1838Bは、内部で約37.9kHzの赤外線キャリアを検出して復調する。つまりPicoは38,000回/秒の光を直接数えるのではなく、「赤外線が来ている区間／来ていない区間」をHIGH/LOWとして読む。出力はアクティブLOWなので、赤外線を検出している間はLOW側になる。</p>
+<p>
+  PL-IRM1838Bは、内部で約37.9kHzの赤外線キャリアを検出して復調する。つまりPicoは38,000回/秒の光を直接数えるのではなく、「赤外線が来ている区間／来ていない区間」をHIGH/LOWとして読む。出力はアクティブLOWなので、赤外線を検出している間はLOW側になる。
+</p>
 {% include svg/svg_index_irm38.html %}
-<div class="note"><strong>PL-IRM1838Bのメーカー推奨電源フィルタ</strong><br>メーカーの応用回路では、PL-IRM1838BのVCC直前に47〜100Ωの直列抵抗を入れ、受信モジュール側のVCC-GND間に47µFコンデンサを置く構成が示されている。電源ノイズが受信回路へ入りにくくするためである。手元の100Ω抵抗はこの用途に使える。47µFには秋月117887（47µF・35V・電解コンデンサ）を使用できる。電解コンデンサは極性があるため、＋を受信モジュール側VCC、−をGNDへ接続する。</div><div class="ok"><strong>PL-IRM1838Bの足順も確定</strong><br>メーカー外形図で、受光部（丸いレンズ側）を正面から見て足を下にすると左から <strong>Pin 1=Output、Pin 2=Ground、Pin 3=Vcc</strong>。今回の3.3V給電では出力HIGHも約3Vなので、Picoの3.3V GPIOへ直接入力できる。</div>
+<div class="note">
+  <strong>PL-IRM1838Bのメーカー推奨電源フィルタ</strong
+  ><br />メーカーの応用回路では、PL-IRM1838BのVCC直前に47〜100Ωの直列抵抗を入れ、受信モジュール側のVCC-GND間に47µFコンデンサを置く構成が示されている。電源ノイズが受信回路へ入りにくくするためである。手元の100Ω抵抗はこの用途に使える。47µFには秋月117887（47µF・35V・電解コンデンサ）を使用できる。電解コンデンサは極性があるため、＋を受信モジュール側VCC、−をGNDへ接続する。
+</div>
+<div class="ok">
+  <strong>PL-IRM1838Bの足順も確定</strong
+  ><br />メーカー外形図で、受光部（丸いレンズ側）を正面から見て足を下にすると左から
+  <strong>Pin 1=Output、Pin 2=Ground、Pin 3=Vcc</strong
+  >。今回の3.3V給電では出力HIGHも約3Vなので、Picoの3.3V GPIOへ直接入力できる。
+</div>
 
 <h2>9. IR LED送信回路の詳細</h2>
-<p>IR LEDをGPIOへ直接つながない。GPIOは「トランジスタをON/OFFする指令」だけを出し、LEDの電流はVBUS側から流す。</p>
-{% include svg/svg_index_ir_tx.html %}<div class="note"><strong>IR LEDとBC337-40BUの向き</strong><br>IR LEDは <strong>アノードを330Ω/VBUS側、カソードをBC337-40BUのCollector側</strong>へ接続する。BC337-40BUは平らな面を手前・足を下にして左から <strong>C（Pin 1）- B（Pin 2）- E（Pin 3）</strong>。</div>
+<p>
+  IR
+  LEDをGPIOへ直接つながない。GPIOは「トランジスタをON/OFFする指令」だけを出し、LEDの電流はVBUS側から流す。
+</p>
+{% include svg/svg_index_ir_tx.html %}
+<div class="note">
+  <strong>IR LEDとBC337-40BUの向き</strong><br />IR LEDは
+  <strong>アノードを330Ω/VBUS側、カソードをBC337-40BUのCollector側</strong
+  >へ接続する。BC337-40BUは平らな面を手前・足を下にして左から
+  <strong>C（Pin 1）- B（Pin 2）- E（Pin 3）</strong>。
+</div>
 <h3>9-1. なぜBC337-40BUを使うのか</h3>
-<p>IR LEDはある程度の電流を流した方が遠くまで届く。一方、GPIOからLED電流を直接取り出す設計にはしない。そこでNPNトランジスタBC337-40BUを電子スイッチとして使う。秋月105998はON Semiconductor製で、BC337-40BUは45V・800mAのTO-92品なので、今回の約10mA級のIR LED駆動には十分な余裕がある。GP18がHIGHになるとBASEへ少量の電流が流れ、COLLECTOR–EMITTER間がONになり、LED側の電流が流れる。</p>
+<p>
+  IR
+  LEDはある程度の電流を流した方が遠くまで届く。一方、GPIOからLED電流を直接取り出す設計にはしない。そこでNPNトランジスタBC337-40BUを電子スイッチとして使う。秋月105998はON
+  Semiconductor製で、BC337-40BUは45V・800mAのTO-92品なので、今回の約10mA級のIR
+  LED駆動には十分な余裕がある。GP18がHIGHになるとBASEへ少量の電流が流れ、COLLECTOR–EMITTER間がONになり、LED側の電流が流れる。
+</p>
 <h3>9-2. なぜBASEに2kΩを入れるのか</h3>
-<p>BASE–EMITTER間はダイオードに近い性質を持つので、GPIOをそのままBASEへつなぐと電流が流れすぎる。今回は手元の2kΩを使う。BASE–EMITTER間電圧をおよそ0.7〜1.0V程度とみなすと、ベース電流はおおむね (3.3V − 0.7〜1.0V) ÷ 2000Ω ≒ 1.15〜1.3mA 程度になる。IR LEDを330Ωで約10mA級から試す構成には十分余裕のある駆動である。LED電流を大きく変更する場合は、ベース抵抗も再計算する。</p>
+<p>
+  BASE–EMITTER間はダイオードに近い性質を持つので、GPIOをそのままBASEへつなぐと電流が流れすぎる。今回は手元の2kΩを使う。BASE–EMITTER間電圧をおよそ0.7〜1.0V程度とみなすと、ベース電流はおおむね
+  (3.3V − 0.7〜1.0V) ÷ 2000Ω ≒ 1.15〜1.3mA 程度になる。IR
+  LEDを330Ωで約10mA級から試す構成には十分余裕のある駆動である。LED電流を大きく変更する場合は、ベース抵抗も再計算する。
+</p>
 <h3>9-3. なぜIR LEDに330Ωを入れるのか</h3>
-<p>OSI5LA5A33A-Bの代表的な順電圧を約1.6V、USB給電時のVBUSを約5Vとすると、トランジスタの電圧降下をいったん無視した上限寄りの概算は (5 − 1.6) ÷ 330 ≒ 0.0103A、約10.3mAとなる。実際にはBC337-40BUのCOLLECTOR–EMITTER間にも少し電圧がかかるため、LED電流はこれよりわずかに小さくなる。最初の動作確認では安全側の約10mA級から始めるため、今回は330Ωを使う。</p>
-{% include tables/ir-led-current.html %}<p class="small">※ VBUS=5V、LED順電圧=1.6V、トランジスタの電圧降下を無視して計算した値。実際の電流は少し小さくなる。</p>
-<p>抵抗値を小さくするとLED電流は増えて赤外線が強くなる可能性があるが、その分LEDとBC337-40BUへの負担も増える。「LEDの最大順電流が100mAだから100mAまで自由に流してよい」という意味ではない。連続電流とパルス電流では許容条件が異なるため、まず330Ωで動作を確認する。</p>
-<div class="note"><strong>購入するIR LEDは型番が分かっているため極性と定格も確定できる</strong><br>OSI5LA5A33A-Bのメーカー資料ではPin 1がAnode（アノード）、Pin 2がCathode（カソード）。DC順電流の絶対最大定格は100mA、パルス順電流は最大1000mAだが、パルス幅10ms以下・デューティ比1/10以下という条件付きである。今回の初期回路は330Ωで約10mAに抑えるため、最大定格近くを狙わない。</div>
-<div class="ok"><strong>BC337-40BUの足順は確定</strong><br>秋月105998はON Semiconductor製BC337-40BUで、メーカー資料のTO-92端子番号は <strong>1=Collector、2=Base、3=Emitter</strong>。平らな面を手前、足を下にして見ると左から <strong>C-B-E</strong> になる。今回の回路ではPin 1 CollectorをIR LEDのカソード側、Pin 2 Baseを2kΩ経由でGP18、Pin 3 EmitterをGNDへ接続する。</div>
+<p>
+  OSI5LA5A33A-Bの代表的な順電圧を約1.6V、USB給電時のVBUSを約5Vとすると、トランジスタの電圧降下をいったん無視した上限寄りの概算は
+  (5 − 1.6) ÷ 330 ≒
+  0.0103A、約10.3mAとなる。実際にはBC337-40BUのCOLLECTOR–EMITTER間にも少し電圧がかかるため、LED電流はこれよりわずかに小さくなる。最初の動作確認では安全側の約10mA級から始めるため、今回は330Ωを使う。
+</p>
+{% include tables/ir-led-current.html %}
+<p class="small">
+  ※
+  VBUS=5V、LED順電圧=1.6V、トランジスタの電圧降下を無視して計算した値。実際の電流は少し小さくなる。
+</p>
+<p>
+  抵抗値を小さくするとLED電流は増えて赤外線が強くなる可能性があるが、その分LEDとBC337-40BUへの負担も増える。「LEDの最大順電流が100mAだから100mAまで自由に流してよい」という意味ではない。連続電流とパルス電流では許容条件が異なるため、まず330Ωで動作を確認する。
+</p>
+<div class="note">
+  <strong>購入するIR LEDは型番が分かっているため極性と定格も確定できる</strong
+  ><br />OSI5LA5A33A-Bのメーカー資料ではPin 1がAnode（アノード）、Pin
+  2がCathode（カソード）。DC順電流の絶対最大定格は100mA、パルス順電流は最大1000mAだが、パルス幅10ms以下・デューティ比1/10以下という条件付きである。今回の初期回路は330Ωで約10mAに抑えるため、最大定格近くを狙わない。
+</div>
+<div class="ok">
+  <strong>BC337-40BUの足順は確定</strong><br />秋月105998はON
+  Semiconductor製BC337-40BUで、メーカー資料のTO-92端子番号は
+  <strong>1=Collector、2=Base、3=Emitter</strong
+  >。平らな面を手前、足を下にして見ると左から
+  <strong>C-B-E</strong> になる。今回の回路ではPin 1 CollectorをIR
+  LEDのカソード側、Pin 2 Baseを2kΩ経由でGP18、Pin 3 EmitterをGNDへ接続する。
+</div>
 
 <h2>10. タクトスイッチの詳細配線</h2>
-<p>スイッチはGP15とGNDの間へ接続し、Pico内部のプルアップを有効にする。押していないときはHIGH、押すとGNDへつながってLOWになる。外付け抵抗は不要。</p>
+<p>
+  スイッチはGP15とGNDの間へ接続し、Pico内部のプルアップを有効にする。押していないときはHIGH、押すとGNDへつながってLOWになる。外付け抵抗は不要。
+</p>
 {% include svg/svg_index_switch.html %}
 
 <h2>11. 対象エアコンと赤外線信号について</h2>
-<p>対象は<strong>日立 白くまくん RAS-AJ3626S</strong>。日立公式の2026年AJシリーズ資料では、このシリーズの付属ワイヤレスリモコンは<strong>RAR-8P2</strong>と確認できる。</p>
-<div class="note"><strong>ここで確定していること／まだ実測すること</strong><br>エアコン型式 RAS-AJ3626S と純正リモコン RAR-8P2 は確定している。一方、日立の公開仕様で赤外線キャリア周波数や通信フォーマットまでは確認できていない。そのため「日立だからNEC方式」「必ず38.0kHz」と決めつけず、PL-IRM1838Bで純正リモコンの信号を実測する。PL-IRM1838Bの中心周波数は37.9kHzなので、まず実機のRAR-8P2を受信できるかを確認し、受信できたMARK/SPACE時間列をそのまま学習対象にする。</div>
+<p>
+  対象は<strong>日立 白くまくん RAS-AJ3626S</strong
+  >。日立公式の2026年AJシリーズ資料では、このシリーズの付属ワイヤレスリモコンは<strong>RAR-8P2</strong>と確認できる。
+</p>
+<div class="note">
+  <strong>ここで確定していること／まだ実測すること</strong><br />エアコン型式
+  RAS-AJ3626S と純正リモコン RAR-8P2
+  は確定している。一方、日立の公開仕様で赤外線キャリア周波数や通信フォーマットまでは確認できていない。そのため「日立だからNEC方式」「必ず38.0kHz」と決めつけず、PL-IRM1838Bで純正リモコンの信号を実測する。PL-IRM1838Bの中心周波数は37.9kHzなので、まず実機のRAR-8P2を受信できるかを確認し、受信できたMARK/SPACE時間列をそのまま学習対象にする。
+</div>
 
 <h2>12. 実験1：PL-IRM1838Bで純正リモコンを受信する</h2>
-<p>RAR-8P2は受信モジュールへ向けるのではなく、普段どおりRAS-AJ3626Sへ向ける。PL-IRM1838Bは、その送信光を横から同時に受けられる位置へ置く。</p>
-<ol><li>Picoの電源を外した状態でPL-IRM1838Bを配線する。</li><li>USBでPicoをPCへ接続する。</li><li>MicroPythonでGP16を入力に設定する。</li><li>立ち上がり・立ち下がりの時刻を記録する。</li><li>純正リモコンRAR-8P2をRAS-AJ3626Sへ向けて電源ONを押す。</li><li>エアコンが反応し、同時にGP16へパルス列が入ることを確認する。</li><li>電源OFF、温度変更、モード変更でも同様に記録する。</li></ol>
+<p>
+  RAR-8P2は受信モジュールへ向けるのではなく、普段どおりRAS-AJ3626Sへ向ける。PL-IRM1838Bは、その送信光を横から同時に受けられる位置へ置く。
+</p>
+<ol>
+  <li>Picoの電源を外した状態でPL-IRM1838Bを配線する。</li>
+  <li>USBでPicoをPCへ接続する。</li>
+  <li>MicroPythonでGP16を入力に設定する。</li>
+  <li>立ち上がり・立ち下がりの時刻を記録する。</li>
+  <li>純正リモコンRAR-8P2をRAS-AJ3626Sへ向けて電源ONを押す。</li>
+  <li>エアコンが反応し、同時にGP16へパルス列が入ることを確認する。</li>
+  <li>電源OFF、温度変更、モード変更でも同様に記録する。</li>
+</ol>
 {% include code/ir_receive.html %}
-<div class="note">これは最初の観察用コードである。各要素に入る時間は「直前のエッジから今回のエッジまで」の長さなので、最初の1要素をそのままMARK開始と決めつけず、信号の開始位置を確認してからMARK/SPACEへ整理する。長い信号やWi-Fi動作中ではMicroPythonの割り込みだけでは精度が不足する場合がある。その場合はRP2350のPIOを使って受信処理をハードウェア寄りに移す。</div>
+<div class="note">
+  これは最初の観察用コードである。各要素に入る時間は「直前のエッジから今回のエッジまで」の長さなので、最初の1要素をそのままMARK開始と決めつけず、信号の開始位置を確認してからMARK/SPACEへ整理する。長い信号やWi-Fi動作中ではMicroPythonの割り込みだけでは精度が不足する場合がある。その場合はRP2350のPIOを使って受信処理をハードウェア寄りに移す。
+</div>
 
 <h2>13. 実験2：赤外線信号を「時間列」として保存する</h2>
-<p>PL-IRM1838Bは38kHzキャリアを復調するので、保存するのは主に「赤外線がある区間（MARK）」と「ない区間（SPACE）」の長さである。エアコンのプロトコルを最初からNECなどと決めつけず、まず実測値を保存する。</p>
+<p>
+  PL-IRM1838Bは38kHzキャリアを復調するので、保存するのは主に「赤外線がある区間（MARK）」と「ない区間（SPACE）」の長さである。エアコンのプロトコルを最初からNECなどと決めつけず、まず実測値を保存する。
+</p>
 {% include svg/svg_index_mark_space.html %}
-<p>操作名と時間列を対応付けて保存する。例：<span class="mono">power_on</span>、<span class="mono">cool_26</span>、<span class="mono">dry</span>など。エアコンリモコンは設定状態をまとめて送る機種が多いため、「温度＋ボタン」だけを単独コマンドと考えず、実際に受信したフレームを基準にする。</p>
+<p>
+  操作名と時間列を対応付けて保存する。例：<span class="mono">power_on</span
+  >、<span class="mono">cool_26</span>、<span class="mono">dry</span
+  >など。エアコンリモコンは設定状態をまとめて送る機種が多いため、「温度＋ボタン」だけを単独コマンドと考えず、実際に受信したフレームを基準にする。
+</p>
 
 <h2>14. 実験3：まず38kHzでIR LEDを点滅させる</h2>
-<p>赤外線受信モジュールは単にIR LEDを点灯しただけでは反応しにくい。赤外線リモコンでは数十kHzの搬送波で高速点滅させる。RAR-8P2の正確な搬送波周波数は公開仕様で未確認なので、まずPL-IRM1838Bの中心周波数に近い38kHzで試す。PicoではPWMで38kHzの搬送波を作れる。</p>
+<p>
+  赤外線受信モジュールは単にIR
+  LEDを点灯しただけでは反応しにくい。赤外線リモコンでは数十kHzの搬送波で高速点滅させる。RAR-8P2の正確な搬送波周波数は公開仕様で未確認なので、まずPL-IRM1838Bの中心周波数に近い38kHzで試す。PicoではPWMで38kHzの搬送波を作れる。
+</p>
 {% include code/ir_carrier.html %}
-<p>この段階ではエアコンを動かす必要はない。スマートフォンのカメラでIR LEDが点滅しているかを見る方法もあるが、機種によって赤外線カットが強く見えないことがある。より確実なのはPL-IRM1838Bで送信を受信して確認すること。</p>
+<p>
+  この段階ではエアコンを動かす必要はない。スマートフォンのカメラでIR
+  LEDが点滅しているかを見る方法もあるが、機種によって赤外線カットが強く見えないことがある。より確実なのはPL-IRM1838Bで送信を受信して確認すること。
+</p>
 
 <h2>15. 実験4：学習したMARK/SPACEを再送信する</h2>
-<p>MARK区間だけPWMをまず38kHzで出し、SPACE区間ではPWMを止める。これを受信時に記録した順番どおり繰り返す。エアコンが反応しない場合は、受信時間列だけでなく搬送波周波数も検討対象にする。</p>
+<p>
+  MARK区間だけPWMをまず38kHzで出し、SPACE区間ではPWMを止める。これを受信時に記録した順番どおり繰り返す。エアコンが反応しない場合は、受信時間列だけでなく搬送波周波数も検討対象にする。
+</p>
 <pre><code>from machine import Pin, PWM
 from time import sleep_us
 
@@ -137,12 +405,17 @@ for i, us in enumerate(signal):
 
 pwm.duty_u16(0)
 pwm.deinit()</code></pre>
-<div class="note">MicroPythonの<span class="mono">sleep_us()</span>だけで長いエアコン信号を完全に再現できない場合は、PIOを使う方式へ進む。Picoを使う利点の一つが、このようなµs単位のGPIO処理をPIOへ任せられる点である。</div>
+<div class="note">
+  MicroPythonの<span class="mono">sleep_us()</span
+  >だけで長いエアコン信号を完全に再現できない場合は、PIOを使う方式へ進む。Picoを使う利点の一つが、このようなµs単位のGPIO処理をPIOへ任せられる点である。
+</div>
 
 <h2>16. 実験5：DHT20で温度・湿度を読む</h2>
 <p>DHT20のI²Cアドレスは0x38。まずI²Cスキャンで存在を確認する。</p>
 {% include code/i2c_scan.html %}
-<p>DHT20は起動後の待ち時間、測定開始コマンド、測定完了待ち、6バイトのデータ読出しという手順で測定する。まずはI²Cスキャン成功までを独立した実験として確認し、その後にDHT20用ドライバを組み込む。</p>
+<p>
+  DHT20は起動後の待ち時間、測定開始コマンド、測定完了待ち、6バイトのデータ読出しという手順で測定する。まずはI²Cスキャン成功までを独立した実験として確認し、その後にDHT20用ドライバを組み込む。
+</p>
 
 <h2>17. 実験6：タクトスイッチを読む</h2>
 {% include code/button.html %}
@@ -152,16 +425,67 @@ pwm.deinit()</code></pre>
 {% include svg/svg_index_integration.html %}
 
 <h2>19. 実験を進める順番</h2>
-<table><tr><th>段階</th><th>作業</th><th>成功条件</th><th>失敗したら確認</th></tr>
-<tr><td>1</td><td>Pico 2 WHへMicroPythonを入れる</td><td>PCからREPLを開ける</td><td>USB、BOOTSEL、ファームウェア</td></tr>
-<tr><td>2</td><td>PL-IRM1838Bだけ接続</td><td>純正リモコン操作でGP16が変化</td><td>Pin 1/2/3の向き、3.3V、GND</td></tr>
-<tr><td>3</td><td>IR信号を記録</td><td>操作別の時間列を取得</td><td>受信位置、信号終了判定</td></tr>
-<tr><td>4</td><td>IR送信回路だけ接続</td><td>38kHzをPL-IRM1838Bで受信</td><td>LED極性、BC337-40BUのC/B/E、抵抗</td></tr>
-<tr><td>5</td><td>学習信号を再送信</td><td>エアコンが同じ操作を再現</td><td>MARK/SPACE、38kHz、距離・方向</td></tr>
-<tr><td>6</td><td>DHT20だけ接続</td><td>I²C scanに0x38</td><td>SDA/SCL、5kΩ×2、0.1µF、3.3V、GND</td></tr>
-<tr><td>7</td><td>温湿度測定</td><td>温度・湿度を取得</td><td>測定コマンド、待ち時間</td></tr>
-<tr><td>8</td><td>タクトスイッチ</td><td>押すとLOW</td><td>GP15、GND、PULL_UP</td></tr>
-<tr><td>9</td><td>統合</td><td>温湿度・ボタン・IRが同時動作</td><td>一機能ずつ無効化して切り分け</td></tr>
+<table>
+  <tr>
+    <th>段階</th>
+    <th>作業</th>
+    <th>成功条件</th>
+    <th>失敗したら確認</th>
+  </tr>
+  <tr>
+    <td>1</td>
+    <td>Pico 2 WHへMicroPythonを入れる</td>
+    <td>PCからREPLを開ける</td>
+    <td>USB、BOOTSEL、ファームウェア</td>
+  </tr>
+  <tr>
+    <td>2</td>
+    <td>PL-IRM1838Bだけ接続</td>
+    <td>純正リモコン操作でGP16が変化</td>
+    <td>Pin 1/2/3の向き、3.3V、GND</td>
+  </tr>
+  <tr>
+    <td>3</td>
+    <td>IR信号を記録</td>
+    <td>操作別の時間列を取得</td>
+    <td>受信位置、信号終了判定</td>
+  </tr>
+  <tr>
+    <td>4</td>
+    <td>IR送信回路だけ接続</td>
+    <td>38kHzをPL-IRM1838Bで受信</td>
+    <td>LED極性、BC337-40BUのC/B/E、抵抗</td>
+  </tr>
+  <tr>
+    <td>5</td>
+    <td>学習信号を再送信</td>
+    <td>エアコンが同じ操作を再現</td>
+    <td>MARK/SPACE、38kHz、距離・方向</td>
+  </tr>
+  <tr>
+    <td>6</td>
+    <td>DHT20だけ接続</td>
+    <td>I²C scanに0x38</td>
+    <td>SDA/SCL、5kΩ×2、0.1µF、3.3V、GND</td>
+  </tr>
+  <tr>
+    <td>7</td>
+    <td>温湿度測定</td>
+    <td>温度・湿度を取得</td>
+    <td>測定コマンド、待ち時間</td>
+  </tr>
+  <tr>
+    <td>8</td>
+    <td>タクトスイッチ</td>
+    <td>押すとLOW</td>
+    <td>GP15、GND、PULL_UP</td>
+  </tr>
+  <tr>
+    <td>9</td>
+    <td>統合</td>
+    <td>温湿度・ボタン・IRが同時動作</td>
+    <td>一機能ずつ無効化して切り分け</td>
+  </tr>
 </table>
 
 <h2>20. 電源を入れる前のチェック</h2>
@@ -171,22 +495,81 @@ pwm.deinit()</code></pre>
 {% include tables/record.html %}
 
 <h2>22. 第1部の完成条件</h2>
-<ul><li>純正リモコンをエアコンへ向けた実際の操作信号をPL-IRM1838Bで同時受信できる。</li><li>受信信号を時間列として保存できる。</li><li>OSI5LA5A33A-B + BC337-40BUで38kHzの赤外線搬送波を生成できる。</li><li>学習した信号を再送信してエアコンを操作できる。</li><li>DHT20から温度・湿度を取得できる。</li><li>タクトスイッチから手動送信できる。</li><li>LCDなしで、USBシリアル出力から現在値と動作状態を確認できる。</li></ul>
+<ul>
+  <li>
+    純正リモコンをエアコンへ向けた実際の操作信号をPL-IRM1838Bで同時受信できる。
+  </li>
+  <li>受信信号を時間列として保存できる。</li>
+  <li>OSI5LA5A33A-B + BC337-40BUで38kHzの赤外線搬送波を生成できる。</li>
+  <li>学習した信号を再送信してエアコンを操作できる。</li>
+  <li>DHT20から温度・湿度を取得できる。</li>
+  <li>タクトスイッチから手動送信できる。</li>
+  <li>LCDなしで、USBシリアル出力から現在値と動作状態を確認できる。</li>
+</ul>
 
 <h2>23. 第2部へのつながり</h2>
-<p>第1部が完成したら、Pico 2 WHを「エアコンの近くに置く実働機」にする。PicoはDHT20、IR受信、IR送信を担当し、Wi-Fi経由でRaspberry Pi 4Bなどのサーバーと通信する。4B側はSSH、Nostr、ログ保存、外部からの命令受付などを担当する。</p>
+<p>
+  第1部が完成したら、Pico 2
+  WHを「エアコンの近くに置く実働機」にする。PicoはDHT20、IR受信、IR送信を担当し、Wi-Fi経由でRaspberry
+  Pi
+  4Bなどのサーバーと通信する。4B側はSSH、Nostr、ログ保存、外部からの命令受付などを担当する。
+</p>
 {% include svg/svg_index_part2.html %}
 
 <h2>24. 参考資料</h2>
 <ul>
-<li><a href="https://pip.raspberrypi.com/documents/RP-008304-DS-pico-2-w-datasheet.pdf">Raspberry Pi Ltd., Raspberry Pi Pico 2 W Datasheet</a>：40ピン配置、3V3、VBUS、GPIOが3.3V固定であること。</li>
-<li><a href="https://akizukidenshi.com/goodsaffix/DS-31P-23-0104%20%20%20PL-IRM1838B.pdf">Para Light Electronics, PL-IRM1838B Data Sheet</a>：電源2.7〜5.5V、中心周波数37.9kHz、active-low、Pin 1=Output / 2=Ground / 3=Vcc。</li>
-<li><a href="https://akizukidenshi.com/goodsaffix/DHT20.pdf">Aosong / ASAIR, DHT20 Data Sheet</a>：電源2.2〜5.5V、I²C、アドレス0x38、Pin 1=VDD / 2=SDA / 3=GND / 4=SCL、4.7kΩプルアップ例、0.1µFデカップリング。</li>
-<li><a href="https://akizukidenshi.com/catalog/g/g113204/">OptoSupply OSI5LA5A33A-B（秋月電子商品ページ）</a>：940nm、順電圧1.6V、順電流最大100mA、放射強度100mW/sr、半減角30°。</li>
-<li><a href="https://akizukidenshi.com/goodsaffix/bc337.pdf">Fairchild / ON Semiconductor, BC337/338 Datasheet</a>：BC337-40BUはNPN、45V、800mA、TO-92。端子はPin 1=Collector / 2=Base / 3=Emitter（平らな面を手前にして左からC-B-E）。</li>
-<li><a href="https://akizukidenshi.com/catalog/g/g105998/">秋月電子 105998 BC337-40BU</a>：ON Semiconductor製BC337-40BU、10個入り。今回のIR LEDスイッチ用に採用。</li>
-<li><a href="https://kadenfan.hitachi.co.jp/raj/lineup/ajseries_aj_26/">日立 ルームエアコン AJシリーズ（2026年）</a>：対象機種RAS-AJ3626Sと付属リモコンRAR-8P2の確認。</li>
-<li><a href="https://akizukidenshi.com/catalog/g/g117887/">秋月電子 117887 47µF 35V 電解コンデンサ</a>：PL-IRM1838Bの47µF電源フィルタ用。</li>
-<li><a href="https://akizukidenshi.com/catalog/g/g110147/">秋月電子 110147 0.1µF セラミックコンデンサ</a>：DHT20の100nFデカップリング用。</li>
+  <li>
+    <a
+      href="https://pip.raspberrypi.com/documents/RP-008304-DS-pico-2-w-datasheet.pdf"
+      >Raspberry Pi Ltd., Raspberry Pi Pico 2 W Datasheet</a
+    >：40ピン配置、3V3、VBUS、GPIOが3.3V固定であること。
+  </li>
+  <li>
+    <a
+      href="https://akizukidenshi.com/goodsaffix/DS-31P-23-0104%20%20%20PL-IRM1838B.pdf"
+      >Para Light Electronics, PL-IRM1838B Data Sheet</a
+    >：電源2.7〜5.5V、中心周波数37.9kHz、active-low、Pin 1=Output / 2=Ground /
+    3=Vcc。
+  </li>
+  <li>
+    <a href="https://akizukidenshi.com/goodsaffix/DHT20.pdf"
+      >Aosong / ASAIR, DHT20 Data Sheet</a
+    >：電源2.2〜5.5V、I²C、アドレス0x38、Pin 1=VDD / 2=SDA / 3=GND /
+    4=SCL、4.7kΩプルアップ例、0.1µFデカップリング。
+  </li>
+  <li>
+    <a href="https://akizukidenshi.com/catalog/g/g113204/"
+      >OptoSupply OSI5LA5A33A-B（秋月電子商品ページ）</a
+    >：940nm、順電圧1.6V、順電流最大100mA、放射強度100mW/sr、半減角30°。
+  </li>
+  <li>
+    <a href="https://akizukidenshi.com/goodsaffix/bc337.pdf"
+      >Fairchild / ON Semiconductor, BC337/338 Datasheet</a
+    >：BC337-40BUはNPN、45V、800mA、TO-92。端子はPin 1=Collector / 2=Base /
+    3=Emitter（平らな面を手前にして左からC-B-E）。
+  </li>
+  <li>
+    <a href="https://akizukidenshi.com/catalog/g/g105998/"
+      >秋月電子 105998 BC337-40BU</a
+    >：ON Semiconductor製BC337-40BU、10個入り。今回のIR LEDスイッチ用に採用。
+  </li>
+  <li>
+    <a href="https://kadenfan.hitachi.co.jp/raj/lineup/ajseries_aj_26/"
+      >日立 ルームエアコン AJシリーズ（2026年）</a
+    >：対象機種RAS-AJ3626Sと付属リモコンRAR-8P2の確認。
+  </li>
+  <li>
+    <a href="https://akizukidenshi.com/catalog/g/g117887/"
+      >秋月電子 117887 47µF 35V 電解コンデンサ</a
+    >：PL-IRM1838Bの47µF電源フィルタ用。
+  </li>
+  <li>
+    <a href="https://akizukidenshi.com/catalog/g/g110147/"
+      >秋月電子 110147 0.1µF セラミックコンデンサ</a
+    >：DHT20の100nFデカップリング用。
+  </li>
 </ul>
-<p class="small">この資料では、手元の5kΩ・2kΩ・330Ωを利用し、まず安全側の電流で一つずつ動作確認する。IR LEDの到達距離を伸ばすために抵抗値を小さくする場合は、LEDの連続・パルス定格、デューティ比、BC337-40BUのベース電流とコレクタ電流を確認してから変更する。</p>
+<p class="small">
+  この資料では、手元の5kΩ・2kΩ・330Ωを利用し、まず安全側の電流で一つずつ動作確認する。IR
+  LEDの到達距離を伸ばすために抵抗値を小さくする場合は、LEDの連続・パルス定格、デューティ比、BC337-40BUのベース電流とコレクタ電流を確認してから変更する。
+</p>

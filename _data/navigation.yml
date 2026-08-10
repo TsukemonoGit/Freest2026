@@ -24,9 +24,9 @@
       url: /yaritai/sekigaisen.html
     - title: データシートの読み方
       url: /yaritai/datasheet.html
-    - title: コンデンサの働き
-      url: /yaritai/condenser.html
     - title: 抵抗の働き
       url: /yaritai/resistor.html
+    - title: コンデンサの働き
+      url: /yaritai/condenser.html
     - title: トランジスタの働き
       url: /yaritai/transistor.html
