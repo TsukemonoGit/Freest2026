@@ -38,8 +38,7 @@ p{margin:.7em 0}
 .subtitle{color:var(--muted);font-size:1.02rem;margin:0 0 1.4em}
 .lead{font-size:1.08rem;color:#374151;background:var(--accent-light);padding:1.1rem 1.2rem;border-radius:8px;border-left:4px solid var(--accent);margin:1.2em 0}
 .small{font-size:.9rem;color:var(--muted)}
-.mono{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;background:var(--code-bg);padding:.08em .35em;border-radius:4px}
-code{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;background:var(--code-bg);padding:.08em .35em;border-radius:4px}
+code,.mono{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;background:var(--code-bg);padding:.08em .35em;border-radius:4px}
 pre{background:#f6f7f8;border:1px solid #d8dde3;padding:14px;overflow:auto;line-height:1.5;border-radius:8px}
 pre code{background:none;padding:0}
 
@@ -75,6 +74,18 @@ svg{display:block;max-width:100%;height:auto;margin:14px 0 22px;background:#fff;
 .diagram svg{border:none;margin:0}
 .diagram-caption{text-align:center;font-size:.85rem;color:var(--muted);margin-top:.75rem}
 
+.card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:20px;margin:18px 0;box-shadow:0 1px 3px #0001}
+.card-title{font-weight:700;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.icon{font-size:1.2rem}
+.big-number{font-size:2rem;font-weight:700;color:var(--accent);display:block;margin:4px 0}
+.highlight-mark{background:#fef2f2;color:#b91c1c;padding:2px 6px;border-radius:4px;font-weight:700}
+.highlight-space{background:#eff6ff;color:#1d4ed8;padding:2px 6px;border-radius:4px;font-weight:700}
+.highlight-carrier{background:#fffbeb;color:#92400e;padding:2px 6px;border-radius:4px;font-weight:700}
+.compare-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.compare-grid .card{margin:0}
+.summary-box{background:linear-gradient(135deg,#dbeafe 0%,#ecfdf5 100%);border-radius:12px;padding:20px;margin:24px 0}
+.summary-box h3{margin-top:0}
+
 .step{display:flex;gap:1rem;align-items:flex-start;margin:1.5rem 0}
 .step-num{flex-shrink:0;width:2.2rem;height:2.2rem;background:var(--accent);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1rem}
 .step-body{flex:1}
@@ -92,6 +103,7 @@ hr{border:none;border-top:1px solid var(--line);margin:2rem 0}
   main.container{padding:24px 18px}
   .site-brand{padding-left:16px;padding-right:16px}
   .toc{columns:1}
+  .compare-grid{grid-template-columns:1fr}
 }
 @media print{
   body{background:#fff}

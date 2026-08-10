@@ -1,0 +1,32 @@
+- id: overview
+  title: 1. 全体像
+- id: electricity
+  title: 2. 電圧・電流・抵抗
+- id: breadboard
+  title: 3. ブレッドボード
+- id: pico
+  title: 4. Pico 2 WH
+- id: resistors
+  title: 5. 今回の4種類の抵抗
+- id: capacitors
+  title: 6. コンデンサ
+- id: transistor
+  title: 7. BC337トランジスタ
+- id: ir
+  title: 8. 赤外線リモコン
+- id: receiver
+  title: 9. PL-IRM1838B
+- id: i2c
+  title: 10. I²CとDHT20
+- id: switch
+  title: 11. タクトスイッチ
+- id: software
+  title: 12. ソフトウェアとの対応
+- id: experiment
+  title: 13. 実験で何を確かめるか
+- id: safety
+  title: 14. 壊さないための原則
+- id: glossary
+  title: 15. 用語集
+- id: quiz
+  title: 16. 確認問題

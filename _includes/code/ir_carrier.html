@@ -1,0 +1,9 @@
+<pre><code>from machine import Pin, PWM
+from time import sleep_ms
+
+pwm = PWM(Pin(18))
+pwm.freq(38000)
+pwm.duty_u16(32768)   # 約50% duty
+sleep_ms(1000)
+pwm.duty_u16(0)
+pwm.deinit()</code></pre>

@@ -1,0 +1,3 @@
+<div class="toc"><strong>目次</strong><br>
+{% for item in include.items %}<a href="#{{ item.id }}">{{ item.title }}</a>{% unless forloop.last %}<br>{% endunless %}{% endfor %}
+</div>

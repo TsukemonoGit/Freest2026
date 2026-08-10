@@ -127,26 +127,6 @@ title: "やりたいことから始める 赤外線エアコンIoT (2/5)"
 
 <p>まずは独立した実験として、純正リモコンの信号を観察します。</p>
 
-<pre><code>from machine import Pin
-from time import ticks_us, ticks_diff, sleep_ms
-
-IR_RX = 16
-pin = Pin(IR_RX, Pin.IN)
-last = ticks_us()
-pulses = []
-
-def edge(p):
-    global last
-    now = ticks_us()
-    pulses.append((p.value(), ticks_diff(now, last)))
-    last = now
-
-pin.irq(trigger=Pin.IRQ_RISING | Pin.IRQ_FALLING, handler=edge)
-
-print("純正リモコンをエアコンへ向けて1回操作")
-sleep_ms(3000)
-pin.irq(handler=None)
-print(pulses)
-</code></pre>
+{% include code/ir_receive.html %}
 
 <p>これは最初の観察用コードです。各要素に入る時間は「直前のエッジから今回のエッジまで」の長さなので、最初の 1 要素をそのまま MARK 開始と決めつけず、信号の開始位置を確認してから MARK/SPACE へ整理します。</p>

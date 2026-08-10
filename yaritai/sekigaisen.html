@@ -1,0 +1,189 @@
+---
+layout: default
+title: "赤外線リモコン信号の仕組み — 38kHz・MARK/SPACE・受信モジュールの中身"
+---
+
+<h1>赤外線リモコン信号の仕組み</h1>
+<p class="subtitle">38kHz・MARK/SPACE・受信モジュールの中身を、ゼロから整理する</p>
+
+<div class="lead">
+  エアコンのリモコン信号を「学習」して再現するためには、<strong>「信号がどういう構造になっているか」</strong>を正しく理解する必要があります。このページでは、前回のやり取りで整理した内容を図解付きでまとめます。
+</div>
+
+<!-- ============================================================ -->
+<h2>1. 信号は「2段階の構造」になっている</h2>
+
+<p>エアコンのリモコンが出す赤外線信号は、一見「光っている／消えている」の繰り返しに見えますが、実は<strong>2つのレイヤー</strong>が重なっています。</p>
+
+<div class="card">
+  <div class="card-title"><span class="icon">📡</span>レイヤー1：搬送波（38kHz）</div>
+  <p>赤外線LEDを<strong>1秒間に38,000回</strong>点滅させる「目印」です。エアコンの受信部は「この38kHzのリズムで変化している光」だけを本物の信号と認識します。</p>
+  <p><span class="big-number">38,000回/秒</span>＝ 1回の点滅に約 <strong>26µs</strong>（マイクロ秒）</p>
+</div>
+
+<div class="card">
+  <div class="card-title"><span class="icon">📊</span>レイヤー2：データ信号（MARK / SPACE）</div>
+  <p>38kHzの搬送波を<strong>「一定時間出す（MARK）」「一定時間止める（SPACE）」</strong>という時間パターンで、電源ONや温度設定などの命令を表現します。</p>
+  <p>MARKとSPACEの<strong>長さの組み合わせ</strong>が「0」「1」「ヘッダー」などのデータを作ります。</p>
+</div>
+
+<figure class="diagram">
+{% include svg/svg_sekigaisen_structure.html %}
+<figcaption class="diagram-caption">図1：赤外線リモコン信号は、38kHzの搬送波を出すMARKと、搬送波を止めるSPACEの時間パターンでデータを表現する</figcaption>
+</figure>
+
+<div class="box box-warn">
+  <strong>⚠️ よくある誤解</strong><br>
+  「MARK = GPIOをHIGHにする、SPACE = GPIOをLOWにする」と思いがちですが、<strong>これは不正確</strong>です。
+  <ul>
+    <li><span class="highlight-mark">MARK</span> ＝ GPIOを<strong>38kHzでHIGH/LOW切り替え</strong>（≒ PWM動作）</li>
+    <li><span class="highlight-space">SPACE</span> ＝ GPIOを<strong>LOWに固定</strong>（または一定状態を保つ）</li>
+  </ul>
+</div>
+
+<!-- ============================================================ -->
+<h2>2. 38kHz は「光の波の周波数」ではない</h2>
+
+<p>「赤外線も波だし、38kHzも波なの？どっちがどっち？」という混乱はよくあります。結論から言うと、<strong>桁が全然違います</strong>。</p>
+
+<table>
+  <tr>
+    <th>波の種類</th>
+    <th>周波数</th>
+    <th>何の波？</th>
+  </tr>
+  <tr>
+    <td><strong>赤外線光そのもの</strong></td>
+    <td>約 <strong>300,000,000 MHz</strong><br>（300テラヘルツ）</td>
+    <td>光が空間を進むときの振動<br>→ 人間の目には見えない</td>
+  </tr>
+  <tr>
+    <td><strong>LEDの点滅（38kHz）</strong></td>
+    <td><strong>38 kHz</strong><br>（0.038メガヘルツ）</td>
+    <td>LEDの電源スイッチのON/OFF<br>→ リモコンの「目印」</td>
+  </tr>
+</table>
+
+<p><strong>1億倍くらい違います。</strong>38kHzは「光の色（波長）を決める周波数」ではなく、あくまで「LEDをチカチカさせるスイッチングの速さ」です。</p>
+
+<figure class="diagram">
+{% include svg/svg_sekigaisen_wave.html %}
+<figcaption class="diagram-caption">図2：赤外線光そのものの振動（300THz）と、LEDの点滅（38kHz）は全然別物。受信側は「点滅のリズム」だけを見る</figcaption>
+</figure>
+
+<!-- ============================================================ -->
+<h2>3. 受信モジュールの中で何が起きているか</h2>
+
+<p>受信モジュール（PL-IRM1838Bなど）に赤外線が入ったとき、内部では以下の処理が行われています。</p>
+
+<figure class="diagram">
+{% include svg/svg_sekigaisen_receiver.html %}
+<figcaption class="diagram-caption">図3：受信モジュール内部の処理フロー。フォトダイオード→増幅→38kHzフィルタ→検波→デジタル出力</figcaption>
+</figure>
+
+<h3>3-1. なぜ太陽光を無視できるのか？</h3>
+
+<p>太陽光や蛍光灯は「常に光っている」（直流に近い）か、「50Hz/60Hzでちらついている」だけです。バンドパスフィルタは<strong>38kHz付近以外をカット</strong>するので、これらのノイズは出力に影響しません。</p>
+
+<table>
+  <tr>
+    <th>光源</th>
+    <th>光の強さの変化</th>
+    <th>受信モジュールの反応</th>
+  </tr>
+  <tr>
+    <td>太陽光</td>
+    <td>ほぼ一定（直流）</td>
+    <td>フィルタでカット → <strong>無視</strong></td>
+  </tr>
+  <tr>
+    <td>蛍光灯</td>
+    <td>50Hz/60Hz でちらつく</td>
+    <td>フィルタでカット → <strong>無視</strong></td>
+  </tr>
+  <tr>
+    <td>リモコン（本物）</td>
+    <td><strong>38kHz</strong> で点滅</td>
+    <td>フィルタを通過 → <strong>検出</strong></td>
+  </tr>
+</table>
+
+<!-- ============================================================ -->
+<h2>4. 正しい用語の整理</h2>
+
+<p>これまでの説明で出てきた用語を、もう一度正確に整理します。</p>
+
+<div class="compare-grid">
+  <div class="card" style="border-top: 4px solid #ef4444;">
+    <div class="card-title"><span class="icon">🔴</span>MARK</div>
+    <p>38kHzの搬送波を<strong>出している期間</strong></p>
+    <p>GPIOでは<strong>38kHzでHIGH/LOWを切り替える</strong>（PWM的な動作）</p>
+    <p>赤外線LEDは高速でチカチカしている</p>
+  </div>
+
+  <div class="card" style="border-top: 4px solid #3b82f6;">
+    <div class="card-title"><span class="icon">🔵</span>SPACE</div>
+    <p>38kHzの搬送波を<strong>止めている期間</strong></p>
+    <p>GPIOでは<strong>LOWに固定</strong>（または一定状態を保つ）</p>
+    <p>赤外線LEDは消えている</p>
+  </div>
+</div>
+
+<div class="box">
+  <strong>💡 補足：GPIOの論理レベルとの関係</strong><br>
+  マイコンのGPIOでは、実装上「MARK中はHIGH、SPACE中はLOW」と扱うことが多いですが、これはあくまで<strong>受信モジュールの出力信号</strong>（デジタル化後）の話です。<br><br>
+  送信側では、MARK中はGPIOを38kHzでスイッチングさせ、SPACE中はGPIOをLOWに固定します。つまり「MARK = HIGH」ではなく、「<strong>MARK = 38kHz変調中</strong>」というのが正確です。
+</div>
+
+<!-- ============================================================ -->
+<h2>5. エアコンリモコンの「学習方式」とは</h2>
+
+<p>日立の純正リモコンRAR-8P2の通信プロトコル（どのタイミングでどのデータを送るか）は公開されていません。そのため、プロトコルを解析するのではなく、純正リモコンが実際に出す信号の<span class="highlight-mark">MARK</span>/<span class="highlight-space">SPACE</span>の時間列をそのまま記録して、同じ時間列を再送信する<strong>「学習方式」</strong>を取ります。</p>
+
+<div class="card">
+  <div class="card-title"><span class="icon">📝</span>学習方式の流れ</div>
+  <ol>
+    <li>純正リモコンのボタンを押す</li>
+    <li>受信モジュールが信号を受けて、GPIOにデジタル波形を出力</li>
+    <li>マイコンがその波形の<span class="highlight-mark">MARK</span>と<span class="highlight-space">SPACE</span>の長さを<strong>µs単位</strong>で記録</li>
+    <li>送信時に、記録した通りの長さで<span class="highlight-mark">MARK</span>（38kHz変調）と<span class="highlight-space">SPACE</span>（消灯）を再現</li>
+  </ol>
+</div>
+
+<p>この方式ではプロトコルの詳細を知らなくても動作しますが、その分、<strong>µs単位のタイミングを忠実に記録・再現できるマイコン</strong>が必要です。これが「なぜPico 2 WHのPIOが選ばれたのか」の核心理由の一つです。</p>
+
+<!-- ============================================================ -->
+<div class="summary-box">
+  <h3>📋 まとめ</h3>
+  <table>
+    <tr>
+      <th>項目</th>
+      <th>正しい理解</th>
+    </tr>
+    <tr>
+      <td><strong>38kHz</strong></td>
+      <td>LEDの<strong>点滅の速さ</strong>（1秒間に38,000回ON/OFF）。光の色の周波数ではない</td>
+    </tr>
+    <tr>
+      <td><strong>MARK</strong></td>
+      <td>38kHzの搬送波を<strong>出している期間</strong>。GPIOは38kHzでスイッチング</td>
+    </tr>
+    <tr>
+      <td><strong>SPACE</strong></td>
+      <td>38kHzの搬送波を<strong>止めている期間</strong>。GPIOはLOW固定</td>
+    </tr>
+    <tr>
+      <td><strong>受信モジュール</strong></td>
+      <td>300THzの光の振動を追うのではなく、「光の強さの変化」のうち<strong>38kHz成分だけ</strong>を取り出してデジタル信号に変換する</td>
+    </tr>
+    <tr>
+      <td><strong>太陽光・照明</strong></td>
+      <td>38kHz以外の周波数なので、フィルタで<strong>除外される</strong></td>
+    </tr>
+  </table>
+</div>
+
+<p class="small" style="margin-top:2rem;">
+  この理解があれば、次のステップ（マイコンでの信号読み取りと再送信）の実装が、なぜ「µs単位のタイミング制御」が重要なのか、直感的に把握できるはずです。
+</p>
+

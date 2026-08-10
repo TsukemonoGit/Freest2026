@@ -1,0 +1,12 @@
+<ul>
+<li>3.3VとGNDが直接つながっていないか</li>
+<li>VBUSの約5VがPicoのGPIOへ直接入る経路がないか</li>
+<li>DHT20のPin 1〜4を逆にしていないか</li>
+<li>DHT20のSDA/SCLに5kΩ×2、VDD-GND間に0.1µFが入っているか</li>
+<li>PL-IRM1838BのPin 1=OUT、2=GND、3=VCCを確認したか</li>
+<li>PL-IRM1838Bの電源側に100Ωと47µFの推奨フィルタが入っているか</li>
+<li>BC337-40BUは平らな面を手前・足を下にして左からC-B-E（Pin 1=Collector / 2=Base / 3=Emitter）になっているか</li>
+<li>OSI5LA5A33A-BのPin 1=アノード、Pin 2=カソードを確認したか</li>
+<li>IR LEDに330Ω、BC337-40BU BASE（Pin 2）に2kΩが入っているか</li>
+<li>すべてのGNDが共通になっているか</li>
+</ul>

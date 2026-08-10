@@ -64,17 +64,7 @@ title: "やりたいことから始める 赤外線エアコンIoT (5/5)"
 
 <h2>3. ピン配置のまとめ</h2>
 
-<table>
-  <tr><th>用途</th><th>GPIO</th><th>物理ピン</th><th>接続先</th></tr>
-  <tr><td>DHT20 SDA</td><td>GP4</td><td>6</td><td>DHT20 Pin 2 SDA（5kΩ プルアップ経由）</td></tr>
-  <tr><td>DHT20 SCL</td><td>GP5</td><td>7</td><td>DHT20 Pin 4 SCL（5kΩ プルアップ経由）</td></tr>
-  <tr><td>タクトスイッチ</td><td>GP15</td><td>20</td><td>スイッチ片側 → GND（内部プルアップ）</td></tr>
-  <tr><td>IR 受信</td><td>GP16</td><td>21</td><td>PL-IRM1838B Pin 1 OUT</td></tr>
-  <tr><td>IR 送信</td><td>GP18</td><td>24</td><td>2kΩ → BC337-40BU BASE（Pin 2）</td></tr>
-  <tr><td>3.3V 電源</td><td>—</td><td>36</td><td>DHT20、PL-IRM1838B（100Ω フィルタ経由）</td></tr>
-  <tr><td>GND</td><td>—</td><td>3/8/13/18/23/28/38 など</td><td>全回路共通</td></tr>
-  <tr><td>USB 給電時の 5V</td><td>VBUS</td><td>40</td><td>IR LED 送信回路の電源（330Ω 経由）</td></tr>
-</table>
+{% include tables/pin.html %}
 
 <h2>4. 一つずつ組み上げて確認する</h2>
 
@@ -139,31 +129,12 @@ title: "やりたいことから始める 赤外線エアコンIoT (5/5)"
 <h2>5. 電源を入れる前の最終チェック</h2>
 
 <div class="box box-warn">
-  <ul>
-    <li>3.3V と GND が直接つながっていないか</li>
-    <li>VBUS の約 5V が Pico の GPIO へ直接入る経路がないか</li>
-    <li>DHT20 の Pin 1〜4 を逆にしていないか</li>
-    <li>DHT20 の SDA/SCL に 5kΩ×2、VDD-GND 間に 0.1µF が入っているか</li>
-    <li>PL-IRM1838B の Pin 1=OUT、2=GND、3=VCC を確認したか</li>
-    <li>PL-IRM1838B の電源側に 100Ω と 47µF の推奨フィルタが入っているか</li>
-    <li>BC337-40BU は平らな面を手前・足を下にして左から C-B-E（Pin 1=Collector / 2=Base / 3=Emitter）になっているか</li>
-    <li>OSI5LA5A33A-B の Pin 1=アノード、Pin 2=カソードを確認したか</li>
-    <li>IR LED に 330Ω、BC337-40BU BASE（Pin 2）に 2kΩ が入っているか</li>
-    <li>すべての GND が共通になっているか</li>
-  </ul>
+  {% include tables/power-on-check.html %}
 </div>
 
 <h2>6. 自由研究として記録する内容</h2>
 
-<table>
-  <tr><th>実験</th><th>変える条件</th><th>記録するもの</th></tr>
-  <tr><td>IR 受信</td><td>電源ON/OFF、温度、モード</td><td>MARK/SPACE の時間列</td></tr>
-  <tr><td>再現性</td><td>同じ操作を 5 回程度</td><td>時間列がどの程度一致するか</td></tr>
-  <tr><td>IR 送信距離</td><td>0.5m、1m、2m、3m</td><td>エアコンが反応した距離</td></tr>
-  <tr><td>IR 送信角度</td><td>LED の向きを変える</td><td>反応できる角度</td></tr>
-  <tr><td>温湿度</td><td>時間経過</td><td>温度・湿度の推移</td></tr>
-  <tr><td>統合動作</td><td>ボタン操作</td><td>押下から IR 送信までの結果</td></tr>
-</table>
+{% include tables/record.html %}
 
 <h2>7. 第2部へのつながり</h2>
 

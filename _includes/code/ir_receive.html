@@ -1,0 +1,20 @@
+<pre><code>from machine import Pin
+from time import ticks_us, ticks_diff, sleep_ms
+
+IR_RX = 16
+pin = Pin(IR_RX, Pin.IN)
+last = ticks_us()
+pulses = []
+
+def edge(p):
+    global last
+    now = ticks_us()
+    pulses.append((p.value(), ticks_diff(now, last)))
+    last = now
+
+pin.irq(trigger=Pin.IRQ_RISING | Pin.IRQ_FALLING, handler=edge)
+
+print("純正リモコンをエアコンへ向けて1回操作")
+sleep_ms(3000)
+pin.irq(handler=None)
+print(pulses)</code></pre>

@@ -20,5 +20,7 @@
   items:
     - title: 通信の基礎（I²Cと1-Wire）
       url: /yaritai/page6.html
+    - title: 赤外線信号の仕組み
+      url: /yaritai/sekigaisen.html
     - title: データシートの読み方
       url: /yaritai/datasheet.html

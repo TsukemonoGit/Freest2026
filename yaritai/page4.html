@@ -47,12 +47,7 @@ title: "やりたいことから始める 赤外線エアコンIoT (4/5)"
   I²C のプルアップ抵抗は「4.7kΩ でなければ動かない」というものではない。小さすぎると LOW へ下げるときの電流が増え、大きすぎると HIGH へ戻る速度が遅くなる。今回は配線が短く、手元の 5kΩ がデータシート例の 4.7kΩ に近いため 5kΩ を使う。
 </div>
 
-<table>
-  <tr><th>抵抗値</th><th>今回の判断</th><th>理由</th></tr>
-  <tr><td>4.7kΩ</td><td>基準値</td><td>DHT20 資料の代表例。</td></tr>
-  <tr><td>5kΩ</td><td><strong>今回使用</strong></td><td>4.7kΩ との差が小さく、短いブレッドボード配線では同じ目的で使える。</td></tr>
-  <tr><td>2kΩ</td><td>DHT20 には今回は使わない</td><td>5kΩ より LOW 時の電流が増える。5kΩ があるためそちらを優先する。</td></tr>
-</table>
+{% include tables/dht20-pullup.html %}
 
 <h2>4. デカップリングコンデンサ</h2>
 
@@ -109,12 +104,7 @@ title: "やりたいことから始める 赤外線エアコンIoT (4/5)"
 
 <p>まず I²C スキャンで DHT20 が認識されているか確認します。</p>
 
-<pre><code>from machine import Pin, I2C
-
-i2c = I2C(0, sda=Pin(4), scl=Pin(5), freq=100000)
-print([hex(x) for x in i2c.scan()])
-# 0x38 が見えれば DHT20 を認識している
-</code></pre>
+{% include code/i2c_scan.html %}
 
 <p>DHT20 は起動後の待ち時間、測定開始コマンド、測定完了待ち、6 バイトのデータ読出しという手順で測定します。まずは I²C スキャン成功までを独立した実験として確認し、その後に DHT20 用ドライバを組み込みます。</p>
 
@@ -129,16 +119,6 @@ print([hex(x) for x in i2c.scan()])
   理由：Pico の内部プルアップを使えば配線は 2 本（GPIO + GND）だけ。外付け抵抗不要。
 </div>
 
-<pre><code>from machine import Pin
-from time import sleep_ms
-
-sw = Pin(15, Pin.IN, Pin.PULL_UP)
-
-while True:
-    if sw.value() == 0:
-        print("button pressed")
-        sleep_ms(300)
-    sleep_ms(10)
-</code></pre>
+{% include code/button.html %}
 
 <p>最終的には、このボタンが押されたら学習済み IR 信号を 1 回送る、という動作に統合します。</p>

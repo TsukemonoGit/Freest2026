@@ -160,12 +160,7 @@ title: "I²C と 1-Wire ってなに？ — 通信方式の基礎"
 
 <p>DHT20 のアドレスは <code>0x38</code>（56）です。マイコンが「アドレス 0x38 のデバイスに聞くよ」と送ると、DHT20 だけが応答し、他のデバイスは黙っています。</p>
 
-<pre><code>from machine import Pin, I2C
-
-i2c = I2C(0, sda=Pin(4), scl=Pin(5), freq=100000)
-print([hex(x) for x in i2c.scan()])
-# [0x38] ← DHT20 が応答している！
-</code></pre>
+{% include code/i2c_scan.html %}
 
 <h2>3. 1-Wire（ワンワイヤー）とは</h2>
 

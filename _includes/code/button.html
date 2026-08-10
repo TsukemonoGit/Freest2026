@@ -1,0 +1,10 @@
+<pre><code>from machine import Pin
+from time import sleep_ms
+
+sw = Pin(15, Pin.IN, Pin.PULL_UP)
+
+while True:
+    if sw.value() == 0:
+        print("button pressed")
+        sleep_ms(300)
+    sleep_ms(10)</code></pre>

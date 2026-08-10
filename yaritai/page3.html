@@ -80,12 +80,7 @@ title: "やりたいことから始める 赤外線エアコンIoT (3/5)"
 
 <p>実際にはトランジスタの COLLECTOR-EMITTER 間にも少し電圧がかかるため、LED 電流はこれよりわずかに小さくなります。最初の動作確認では安全側の約 10mA 級から始めます。</p>
 
-<table>
-  <tr><th>IR LED 直列抵抗</th><th>上限寄りの概算電流※</th><th>今回の扱い</th></tr>
-  <tr><td>330Ω</td><td>約 10.3mA</td><td><strong>最初に使用</strong>。安全側で送信確認する。</td></tr>
-  <tr><td>220Ω</td><td>約 15.5mA</td><td>手元にあれば次の候補。330Ω で距離不足のときに検討する。</td></tr>
-  <tr><td>100Ω</td><td>約 34mA</td><td>最初から使わない。LED 定格だけでなくパルス幅・デューティ比・トランジスタの駆動条件を確認してから検討する。</td></tr>
-</table>
+{% include tables/ir-led-current.html %}
 
 <p>※ VBUS=5V、LED 順電圧=1.6V、トランジスタの電圧降下を無視して計算した値。実際の電流は少し小さくなる。</p>
 
@@ -142,15 +137,6 @@ title: "やりたいことから始める 赤外線エアコンIoT (3/5)"
 
 <p>赤外線受信モジュールは単に IR LED を点灯しただけでは反応しにくい。赤外線リモコンでは数十 kHz の搬送波で高速点滅させる必要があります。Pico では PWM で 38kHz の搬送波を作れます。</p>
 
-<pre><code>from machine import Pin, PWM
-from time import sleep_ms
-
-pwm = PWM(Pin(18))
-pwm.freq(38000)
-pwm.duty_u16(32768)   # 約50% duty
-sleep_ms(1000)
-pwm.duty_u16(0)
-pwm.deinit()
-</code></pre>
+{% include code/ir_carrier.html %}
 
 <p>この段階ではエアコンを動かす必要はありません。PL-IRM1838B で自分の送信を自分で受信して確認するか、スマートフォンのカメラで IR LED が点滅しているかを見る方法もあります（機種によって赤外線カットが強く見えないことがあるため、PL-IRM1838B での確認がより確実です）。</p>

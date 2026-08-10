@@ -1,0 +1,74 @@
+<svg viewBox="0 0 720 420" xmlns="http://www.w3.org/2000/svg">
+  <rect x="0" y="0" width="720" height="420" fill="#f8fafc" rx="8"/>
+  <text x="360" y="28" text-anchor="middle" font-size="14" font-weight="bold" fill="#374151">受信モジュール（PL-IRM1838B）の内部構造</text>
+
+  <!-- 入力 -->
+  <text x="30" y="55" font-size="11" font-weight="bold" fill="#b45309">赤外線光が入る</text>
+  <line x1="30" y1="65" x2="30" y2="380" stroke="#f59e0b" stroke-width="2" stroke-dasharray="4,2"/>
+
+  <!-- ステップ1：フォトダイオード -->
+  <g transform="translate(60, 70)">
+    <rect x="0" y="0" width="600" height="65" fill="#fff" stroke="#e2e8f0" stroke-width="1.5" rx="8"/>
+    <text x="10" y="20" font-size="12" font-weight="bold" fill="#374151">① フォトダイオード（目の役割）</text>
+    <text x="10" y="40" font-size="10" fill="#4b5563">「光が当たっている間、電流が流れる」だけのデバイス</text>
+    <text x="10" y="55" font-size="10" fill="#6b7280">→ 300THzの振動そのものは追えない。「光の強さの変化（包絡線）」だけを捉える</text>
+    <!-- イメージ -->
+    <g transform="translate(420, 15)">
+      <path d="M0,20 Q5,5 10,20 Q15,35 20,20 Q25,5 30,20 Q35,35 40,20" fill="none" stroke="#f59e0b" stroke-width="1.5"/>
+      <text x="50" y="25" font-size="9" fill="#92400e">光の強さの変化</text>
+      <text x="50" y="38" font-size="9" fill="#92400e">（包絡線）だけ感知</text>
+    </g>
+  </g>
+
+  <!-- 矢印 -->
+  <line x1="360" y1="135" x2="360" y2="155" stroke="#64748b" stroke-width="1.5" marker-end="url(#arr-down)"/>
+
+  <!-- ステップ2：増幅回路 -->
+  <g transform="translate(60, 160)">
+    <rect x="0" y="0" width="600" height="50" fill="#fff" stroke="#e2e8f0" stroke-width="1.5" rx="8"/>
+    <text x="10" y="20" font-size="12" font-weight="bold" fill="#374151">② 増幅回路</text>
+    <text x="10" y="38" font-size="10" fill="#4b5563">フォトダイオードから出てきた微弱な電流信号を電圧信号に変換し、大きく増幅する</text>
+  </g>
+
+  <!-- 矢印 -->
+  <line x1="360" y1="210" x2="360" y2="230" stroke="#64748b" stroke-width="1.5" marker-end="url(#arr-down)"/>
+
+  <!-- ステップ3：バンドパスフィルタ -->
+  <g transform="translate(60, 235)">
+    <rect x="0" y="0" width="600" height="65" fill="#dbeafe" stroke="#2563eb" stroke-width="2" rx="8"/>
+    <text x="10" y="20" font-size="12" font-weight="bold" fill="#1e40af">③ バンドパスフィルタ ★重要</text>
+    <text x="10" y="40" font-size="10" fill="#1e40af">「光の強さの変化」のうち、38kHz付近だけを取り出す。それ以外はカット。</text>
+    <text x="10" y="55" font-size="10" fill="#1e40af">→ 太陽光（直流）や蛍光灯（50/60Hz）はここで除外される</text>
+    <!-- フィルタ特性イメージ -->
+    <g transform="translate(420, 10)">
+      <line x1="0" y1="40" x2="120" y2="40" stroke="#cbd5e1" stroke-width="1"/>
+      <path d="M0,40 Q20,40 30,40 Q40,40 50,10 Q60,40 70,40 Q80,40 90,40 Q100,40 110,40" 
+            fill="none" stroke="#2563eb" stroke-width="2"/>
+      <text x="60" y="55" text-anchor="middle" font-size="9" fill="#2563eb">38kHzだけ通す</text>
+    </g>
+  </g>
+
+  <!-- 矢印 -->
+  <line x1="360" y1="300" x2="360" y2="320" stroke="#64748b" stroke-width="1.5" marker-end="url(#arr-down)"/>
+
+  <!-- ステップ4：検波＋積分回路 -->
+  <g transform="translate(60, 325)">
+    <rect x="0" y="0" width="600" height="65" fill="#ecfdf5" stroke="#10b981" stroke-width="1.5" rx="8"/>
+    <text x="10" y="20" font-size="12" font-weight="bold" fill="#065f46">④ 検波＋積分回路</text>
+    <text x="10" y="40" font-size="10" fill="#065f46">38kHzの波を「平滑化」して、デジタル信号に変換</text>
+    <text x="10" y="55" font-size="10" fill="#065f46">→ 「38kHzが来ていた期間」= HIGH、「来ていなかった期間」= LOW</text>
+    <!-- イメージ -->
+    <g transform="translate(420, 15)">
+      <rect x="0" y="5" width="30" height="20" fill="#fef2f2" stroke="#ef4444" stroke-width="1" rx="2"/>
+      <rect x="35" y="5" width="15" height="20" fill="#eff6ff" stroke="#3b82f6" stroke-width="1" rx="2"/>
+      <rect x="55" y="5" width="25" height="20" fill="#fef2f2" stroke="#ef4444" stroke-width="1" rx="2"/>
+      <text x="45" y="38" text-anchor="middle" font-size="9" fill="#065f46">GPIO出力</text>
+    </g>
+  </g>
+
+  <defs>
+    <marker id="arr-down" markerWidth="8" markerHeight="8" refX="4" refY="8" orient="auto">
+      <path d="M0,0 L8,0 L4,8 z" fill="#64748b"/>
+    </marker>
+  </defs>
+</svg>

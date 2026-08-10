@@ -1,0 +1,5 @@
+<pre><code>from machine import Pin, I2C
+
+i2c = I2C(0, sda=Pin(4), scl=Pin(5), freq=100000)
+print([hex(x) for x in i2c.scan()])
+# 0x38 が見えればDHT20を認識している</code></pre>
