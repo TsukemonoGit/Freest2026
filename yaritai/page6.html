@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>I²C と 1-Wire ってなに？ — 通信方式の基礎</title>
+<style>
+  :root {
+    --bg: #fafafa; --text: #1a1a1a; --muted: #555;
+    --accent: #2563eb; --accent-light: #dbeafe; --border: #e5e7eb;
+    --code-bg: #f3f4f6; --warn: #f59e0b; --warn-bg: #fffbeb;
+    --ok: #10b981; --ok-bg: #ecfdf5; --danger: #ef4444; --danger-bg: #fee2e2;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: var(--bg); color: var(--text); line-height: 1.7; margin: 0; padding: 0;
+  }
+  .container { max-width: 880px; margin: 0 auto; padding: 2rem 1.5rem; }
+  header { text-align: center; padding: 2rem 0 1.5rem; border-bottom: 2px solid var(--border); margin-bottom: 2rem; }
+  h1 { font-size: 1.7rem; margin: 0 0 0.5rem; letter-spacing: -0.02em; }
+  .subtitle { color: var(--muted); font-size: 1rem; }
+  h2 { font-size: 1.3rem; margin-top: 2.5rem; margin-bottom: 1rem; padding-bottom: 0.3rem; border-bottom: 2px solid var(--accent); display: inline-block; }
+  h3 { font-size: 1.1rem; margin-top: 2rem; color: var(--accent); }
+  h4 { font-size: 1rem; margin-top: 1.5rem; color: #374151; }
+  p { margin: 1rem 0; }
+  .lead { font-size: 1.1rem; color: var(--muted); background: var(--accent-light); padding: 1.2rem; border-radius: 8px; border-left: 4px solid var(--accent); }
+  .diagram { background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; margin: 1.5rem 0; overflow-x: auto; }
+  .diagram svg { display: block; margin: 0 auto; max-width: 100%; height: auto; }
+  .diagram-caption { text-align: center; font-size: 0.85rem; color: var(--muted); margin-top: 0.75rem; }
+  table { width: 100%; border-collapse: collapse; margin: 1.5rem 0; font-size: 0.95rem; }
+  th, td { border: 1px solid var(--border); padding: 0.6rem 0.8rem; text-align: left; }
+  th { background: var(--accent-light); font-weight: 600; }
+  tr:nth-child(even) { background: #f9fafb; }
+  code { background: var(--code-bg); padding: 0.15rem 0.35rem; border-radius: 4px; font-family: "SFMono-Regular", Consolas, monospace; font-size: 0.9em; }
+  pre { background: var(--code-bg); padding: 1rem; border-radius: 8px; overflow-x: auto; font-size: 0.9rem; }
+  .box { background: #fff; border: 1px solid var(--border); border-radius: 8px; padding: 1.2rem; margin: 1rem 0; }
+  .box-warn { background: var(--warn-bg); border-color: #fcd34d; }
+  .box-ok { background: var(--ok-bg); border-color: #6ee7b7; }
+  .box-danger { background: var(--danger-bg); border-color: #fca5a5; }
+  .box-info { background: #eff6ff; border-color: #93c5fd; }
+  .step { display: flex; gap: 1rem; align-items: flex-start; margin: 1.5rem 0; }
+  .step-num { flex-shrink: 0; width: 2.2rem; height: 2.2rem; background: var(--accent); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1rem; }
+  .step-body { flex: 1; }
+  .step-body h4 { margin: 0 0 0.4rem; font-size: 1.05rem; }
+  ul, ol { padding-left: 1.5rem; }
+  li { margin: 0.4rem 0; }
+  .ds-quote { background: #f0fdf4; border-left: 4px solid #22c55e; padding: 1rem; margin: 1rem 0; border-radius: 0 8px 8px 0; }
+  .ds-quote-title { font-weight: bold; color: #15803d; margin-bottom: 0.5rem; }
+  footer { text-align: center; margin-top: 3rem; padding: 2rem 0; color: var(--muted); font-size: 0.85rem; border-top: 1px solid var(--border); }
+  @media (max-width: 600px) { h1 { font-size: 1.3rem; } .container { padding: 1rem; } }
+</style>
+<base target="_blank">
+</head>
+<body>
+<div class="container">
+<header>
+  <h1>I²C と 1-Wire ってなに？ — 通信方式の基礎</h1>
+  <p class="subtitle">電子工作初心者向け：センサーとマイコンが「話す」仕組み</p>
+</header>
+
+<p class="lead">
+  マイコンとセンサーをつなぐとき、「I²C で通信します」「1-Wire 接続です」という言葉をよく見かけます。これらは<strong>「マイコンと部品がデータをやり取りするための約束事（プロトコル）」</strong>です。配線の本数や信号の出し方が決まっているので、同じ「言葉」を話せる部品同士なら、メーカーが違ってもつなげられます。
+</p>
+
+<h2>1. そもそも「通信」とは</h2>
+
+<p>マイコン（Pico）が温度センサー（DHT20）から「今何度ですか」と聞くには、数字を電気信号に変えて送ってもらう必要があります。このとき、以下のことが決まっていないと混乱します：</p>
+
+<ul>
+  <li><strong>いつ話し始めるか</strong>（タイミング）</li>
+  <li><strong>0 と 1 をどう表現するか</strong>（電圧の HIGH/LOW）</li>
+  <li><strong>どっちから話すか</strong>（マイコンが主導か、センサーが勝手に話すか）</li>
+  <li><strong>間違いがあったらどうするか</strong>（確認の仕方）</li>
+</ul>
+
+<p>これらを決めたのが「通信プロトコル」です。I²C も 1-Wire も、それぞれ独自の「約束事」です。</p>
+
+<div class="diagram">
+  <svg viewBox="0 0 640 200" xmlns="http://www.w3.org/2000/svg">
+    <rect x="0" y="0" width="640" height="200" fill="#f8fafc" rx="12"/>
+    <rect x="60" y="60" width="140" height="80" rx="8" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+    <text x="130" y="90" text-anchor="middle" font-size="12" font-weight="bold" fill="#1e3a8a">マイコン</text>
+    <text x="130" y="110" text-anchor="middle" font-size="10" fill="#4b5563">Pico 2 WH</text>
+    <text x="130" y="125" text-anchor="middle" font-size="9" fill="#6b7280">「今何度？」</text>
+    <line x1="200" y1="100" x2="280" y2="100" stroke="#2563eb" stroke-width="2" stroke-dasharray="6,3"/>
+    <text x="240" y="90" text-anchor="middle" font-size="10" fill="#2563eb">通信プロトコル</text>
+    <text x="240" y="115" text-anchor="middle" font-size="9" fill="#6b7280">約束事に従って</text>
+    <text x="240" y="128" text-anchor="middle" font-size="9" fill="#6b7280">データを送受信</text>
+    <rect x="300" y="60" width="140" height="80" rx="8" fill="#ecfdf5" stroke="#10b981" stroke-width="2"/>
+    <text x="370" y="90" text-anchor="middle" font-size="12" font-weight="bold" fill="#065f46">センサー</text>
+    <text x="370" y="110" text-anchor="middle" font-size="10" fill="#4b5563">DHT20</text>
+    <text x="370" y="125" text-anchor="middle" font-size="9" fill="#6b7280">「26.5℃です」</text>
+    <line x1="440" y1="100" x2="520" y2="100" stroke="#10b981" stroke-width="2" stroke-dasharray="6,3"/>
+    <rect x="520" y="60" width="100" height="80" rx="8" fill="#fffbeb" stroke="#f59e0b" stroke-width="2"/>
+    <text x="570" y="90" text-anchor="middle" font-size="11" font-weight="bold" fill="#92400e">データ</text>
+    <text x="570" y="110" text-anchor="middle" font-size="10" fill="#4b5563">温度・湿度</text>
+    <text x="570" y="125" text-anchor="middle" font-size="9" fill="#6b7280">デジタル信号</text>
+  </svg>
+  <p class="diagram-caption">図1：マイコンとセンサーが「通信プロトコル」という共通の約束事でデータをやり取りする。</p>
+</div>
+
+<h2>2. I²C（アイ・スクエア・シー）とは</h2>
+
+<h3>2-1. 正式名称と特徴</h3>
+
+<p>I²C は <strong>Inter-Integrated Circuit</strong> の略です。フィリップス（現在は NXP）が開発した通信方式で、<strong>クロック線（SCL）とデータ線（SDA）の 2 本</strong>だけで複数のデバイスと通信できます。</p>
+
+<table>
+  <tr><th>項目</th><th>I²C の特徴</th></tr>
+  <tr><td>配線本数</td><td>2 本（SCL + SDA）＋ 電源・GND</td></tr>
+  <tr><td>通信速度</td><td>標準モード 100kHz、高速モード 400kHz など</td></tr>
+  <tr><td>接続できるデバイス数</td><td>理論上は 127 個（アドレスによる識別）</td></tr>
+  <tr><td>主導権</td><td>マスター（マイコン）が主導し、スレーブ（センサーなど）が応答</td></tr>
+  <tr><td>信号の出し方</td><td>オープンドレイン（後述）</td></tr>
+</table>
+
+<h3>2-2. 2 本の線の役割</h3>
+
+<ul>
+  <li><strong>SCL（Serial Clock）</strong>：クロック線。マスターが「今から 1 ビット目です」「次は 2 ビット目です」というタイミングを伝える線。</li>
+  <li><strong>SDA（Serial Data）</strong>：データ線。実際の 0 と 1 が流れる線。SCL のタイミングに合わせて HIGH/LOW が変化する。</li>
+</ul>
+
+<div class="diagram">
+  <svg viewBox="0 0 600 240" xmlns="http://www.w3.org/2000/svg">
+    <rect x="0" y="0" width="600" height="240" fill="#f8fafc" rx="12"/>
+    <text x="300" y="30" text-anchor="middle" font-size="13" font-weight="bold" fill="#374151">I²C の信号イメージ</text>
+    <text x="40" y="65" font-size="11" font-weight="bold" fill="#1e3a8a">SCL（クロック）</text>
+    <line x1="100" y1="70" x2="100" y2="90" stroke="#2563eb" stroke-width="2"/>
+    <line x1="100" y1="90" x2="150" y2="90" stroke="#2563eb" stroke-width="2"/>
+    <line x1="150" y1="90" x2="150" y2="70" stroke="#2563eb" stroke-width="2"/>
+    <line x1="150" y1="70" x2="200" y2="70" stroke="#2563eb" stroke-width="2"/>
+    <line x1="200" y1="70" x2="200" y2="90" stroke="#2563eb" stroke-width="2"/>
+    <line x1="200" y1="90" x2="250" y2="90" stroke="#2563eb" stroke-width="2"/>
+    <line x1="250" y1="90" x2="250" y2="70" stroke="#2563eb" stroke-width="2"/>
+    <line x1="250" y1="70" x2="300" y2="70" stroke="#2563eb" stroke-width="2"/>
+    <line x1="300" y1="70" x2="300" y2="90" stroke="#2563eb" stroke-width="2"/>
+    <line x1="300" y1="90" x2="350" y2="90" stroke="#2563eb" stroke-width="2"/>
+    <line x1="350" y1="90" x2="350" y2="70" stroke="#2563eb" stroke-width="2"/>
+    <line x1="350" y1="70" x2="400" y2="70" stroke="#2563eb" stroke-width="2"/>
+    <line x1="400" y1="70" x2="400" y2="90" stroke="#2563eb" stroke-width="2"/>
+    <line x1="400" y1="90" x2="450" y2="90" stroke="#2563eb" stroke-width="2"/>
+    <line x1="450" y1="90" x2="450" y2="70" stroke="#2563eb" stroke-width="2"/>
+    <line x1="450" y1="70" x2="500" y2="70" stroke="#2563eb" stroke-width="2"/>
+    <text x="300" y="105" text-anchor="middle" font-size="10" fill="#6b7280">マスターが「タイミング」を刻む</text>
+    <text x="40" y="145" font-size="11" font-weight="bold" fill="#065f46">SDA（データ）</text>
+    <line x1="100" y1="150" x2="150" y2="150" stroke="#10b981" stroke-width="2"/>
+    <line x1="150" y1="150" x2="150" y2="170" stroke="#10b981" stroke-width="2"/>
+    <line x1="150" y1="170" x2="250" y2="170" stroke="#10b981" stroke-width="2"/>
+    <line x1="250" y1="170" x2="250" y2="150" stroke="#10b981" stroke-width="2"/>
+    <line x1="250" y1="150" x2="350" y2="150" stroke="#10b981" stroke-width="2"/>
+    <line x1="350" y1="150" x2="350" y2="170" stroke="#10b981" stroke-width="2"/>
+    <line x1="350" y1="170" x2="450" y2="170" stroke="#10b981" stroke-width="2"/>
+    <line x1="450" y1="170" x2="450" y2="150" stroke="#10b981" stroke-width="2"/>
+    <line x1="450" y1="150" x2="500" y2="150" stroke="#10b981" stroke-width="2"/>
+    <text x="300" y="185" text-anchor="middle" font-size="10" fill="#6b7280">SCLのタイミングに合わせて0/1を送る</text>
+    <line x1="125" y1="95" x2="125" y2="145" stroke="#9ca3af" stroke-width="1" stroke-dasharray="3"/>
+    <line x1="175" y1="95" x2="175" y2="145" stroke="#9ca3af" stroke-width="1" stroke-dasharray="3"/>
+    <line x1="225" y1="95" x2="225" y2="145" stroke="#9ca3af" stroke-width="1" stroke-dasharray="3"/>
+    <line x1="275" y1="95" x2="275" y2="145" stroke="#9ca3af" stroke-width="1" stroke-dasharray="3"/>
+    <line x1="325" y1="95" x2="325" y2="145" stroke="#9ca3af" stroke-width="1" stroke-dasharray="3"/>
+    <line x1="375" y1="95" x2="375" y2="145" stroke="#9ca3af" stroke-width="1" stroke-dasharray="3"/>
+    <line x1="425" y1="95" x2="425" y2="145" stroke="#9ca3af" stroke-width="1" stroke-dasharray="3"/>
+    <line x1="475" y1="95" x2="475" y2="145" stroke="#9ca3af" stroke-width="1" stroke-dasharray="3"/>
+    <text x="300" y="215" text-anchor="middle" font-size="10" fill="#9ca3af">SCLが立ち上がるタイミングでSDAの値を読む</text>
+  </svg>
+  <p class="diagram-caption">図2：I²C の信号イメージ。SCL（クロック）がタイミングを刻み、SDA（データ）がそのタイミングに合わせて 0/1 を変化する。</p>
+</div>
+
+<h3>2-3. オープンドレインとプルアップ抵抗</h3>
+
+<p>I²C の大きな特徴は<strong>「オープンドレイン」</strong>という信号の出し方です。通常の GPIO は HIGH（3.3V）も LOW（0V）も自分で出力しますが、I²C のデバイスは<strong>LOW だけを作り、HIGH は「放っておく」</strong>のです。</p>
+
+<p>このため、信号線が HIGH になるのは外部の<strong>プルアップ抵抗</strong>が電源から電流を流して引き上げてくれるおかげです。抵抗がないと信号線は宙ぶらりんになり、HIGH も LOW も安定しません。</p>
+
+<div class="diagram">
+  <svg viewBox="0 0 560 220" xmlns="http://www.w3.org/2000/svg">
+    <rect x="0" y="0" width="560" height="220" fill="#f8fafc" rx="12"/>
+    <text x="280" y="30" text-anchor="middle" font-size="13" font-weight="bold" fill="#374151">オープンドレインとプルアップ抵抗</text>
+    <line x1="40" y1="60" x2="40" y2="120" stroke="#2563eb" stroke-width="2"/>
+    <text x="30" y="55" font-size="11" font-weight="bold" fill="#1e3a8a">3.3V</text>
+    <rect x="30" y="120" width="20" height="30" fill="#fde68a" stroke="#d97706" stroke-width="1.5" rx="2"/>
+    <text x="60" y="138" font-size="10" fill="#92400e">プルアップ抵抗</text>
+    <text x="60" y="150" font-size="9" fill="#6b7280">（例：5kΩ）</text>
+    <line x1="40" y1="150" x2="40" y2="180" stroke="#374151" stroke-width="2"/>
+    <line x1="40" y1="180" x2="200" y2="180" stroke="#374151" stroke-width="2"/>
+    <text x="120" y="175" font-size="10" fill="#374151">SDA 信号線</text>
+    <rect x="200" y="150" width="80" height="60" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+    <text x="240" y="172" text-anchor="middle" font-size="10" font-weight="bold" fill="#1e3a8a">マイコン</text>
+    <text x="240" y="188" text-anchor="middle" font-size="9" fill="#1e3a8a">LOW を作る</text>
+    <text x="240" y="200" text-anchor="middle" font-size="9" fill="#1e3a8a">（HIGHは放る）</text>
+    <rect x="320" y="150" width="80" height="60" rx="6" fill="#ecfdf5" stroke="#10b981" stroke-width="1.5"/>
+    <text x="360" y="172" text-anchor="middle" font-size="10" font-weight="bold" fill="#065f46">DHT20</text>
+    <text x="360" y="188" text-anchor="middle" font-size="9" fill="#065f46">LOW を作る</text>
+    <text x="360" y="200" text-anchor="middle" font-size="9" fill="#065f46">（HIGHは放る）</text>
+    <line x1="280" y1="180" x2="320" y2="180" stroke="#374151" stroke-width="2"/>
+    <text x="460" y="170" font-size="10" fill="#6b7280">両方とも「LOWだけ作る」</text>
+    <text x="460" y="185" font-size="10" fill="#6b7280">HIGHはプルアップ抵抗が</text>
+    <text x="460" y="200" font-size="10" fill="#6b7280">電源から引き上げる</text>
+  </svg>
+  <p class="diagram-caption">図3：I²C はオープンドレイン方式。デバイスは LOW だけを作り、HIGH はプルアップ抵抗が電源から引き上げる。</p>
+</div>
+
+<div class="box box-info">
+  <strong>なぜわざわざオープンドレインにするのか</strong><br>
+  複数のデバイスが同じ SDA/SCL 線を共有する場合、A が HIGH を出そうとした瞬間に B が LOW を出すと「ショート」が起きて壊れる可能性があります。オープンドレインなら「LOW を作る／放る（何もしない）」だけなので、複数デバイスが同時に信号を出しても衝突しにくい仕組みになっています。
+</div>
+
+<h3>2-4. アドレスでデバイスを選ぶ</h3>
+
+<p>I²C では同じ 2 本の線に複数のデバイスをつなげられます。では「誰に話しかけているのか」をどう区別するか？ それが<strong>アドレス</strong>です。各デバイスには製品ごとに決まったアドレス（7 ビットの数字）があります。</p>
+
+<p>DHT20 のアドレスは <code>0x38</code>（56）です。マイコンが「アドレス 0x38 のデバイスに聞くよ」と送ると、DHT20 だけが応答し、他のデバイスは黙っています。</p>
+
+<pre><code>from machine import Pin, I2C
+
+i2c = I2C(0, sda=Pin(4), scl=Pin(5), freq=100000)
+print([hex(x) for x in i2c.scan()])
+# [0x38] ← DHT20 が応答している！
+</code></pre>
+
+<h2>3. 1-Wire（ワンワイヤー）とは</h2>
+
+<h3>3-1. 正式名称と特徴</h3>
+
+<p>1-Wire は <strong>Maxim Integrated（現在は Analog Devices）</strong> が開発した通信方式で、<strong>データ線が 1 本だけ</strong>で済みます。電源線（VDD）が不要な「寄生電源」モードもあり、極端に配線を減らせます。</p>
+
+<table>
+  <tr><th>項目</th><th>1-Wire の特徴</th></tr>
+  <tr><td>配線本数</td><td>1 本（データ）＋ GND。電源線は不要な場合もある</td></tr>
+  <tr><td>通信速度</td><td>16.3kbps（標準）、比較的遅い</td></tr>
+  <tr><td>接続できるデバイス数</td><td>理論上は多数（ただし実用的には数十個程度）</td></tr>
+  <tr><td>主導権</td><td>マスター（マイコン）が常に主導</td></tr>
+  <tr><td>信号の出し方</td><td>オープンドレイン（I²C と同様）</td></tr>
+</table>
+
+<h3>3-2. 1 本でどうやって通信するのか</h3>
+
+<p>1-Wire ではデータ線 1 本で「電源供給」と「データ通信」の両方を行います。具体的には：</p>
+
+<ol>
+  <li>マイコンがデータ線を一定時間 LOW にして「リセットパルス」を送る</li>
+  <li>スレーブ（センサー）が存在を示す「プレゼンスパルス」を返す</li>
+  <li>その後、マイコンが「1」を送るには短い LOW、"0" を送るには長い LOW を作る</li>
+  <li>スレーブも同じように短い LOW／長い LOW で応答する</li>
+</ol>
+
+<p>「短い／長い」という<strong>パルスの長さで 0 と 1 を区別</strong>するため、タイミングが I²C よりもシビアです。</p>
+
+<div class="diagram">
+  <svg viewBox="0 0 600 200" xmlns="http://www.w3.org/2000/svg">
+    <rect x="0" y="0" width="600" height="200" fill="#f8fafc" rx="12"/>
+    <text x="300" y="30" text-anchor="middle" font-size="13" font-weight="bold" fill="#374151">1-Wire の信号イメージ</text>
+    <text x="40" y="65" font-size="11" font-weight="bold" fill="#92400e">データ線（1本）</text>
+    <line x1="80" y1="80" x2="80" y2="130" stroke="#92400e" stroke-width="2"/>
+    <line x1="80" y1="130" x2="160" y2="130" stroke="#92400e" stroke-width="2"/>
+    <line x1="160" y1="130" x2="160" y2="80" stroke="#92400e" stroke-width="2"/>
+    <line x1="160" y1="80" x2="180" y2="80" stroke="#92400e" stroke-width="2"/>
+    <text x="120" y="150" text-anchor="middle" font-size="9" fill="#92400e">リセットパルス</text>
+    <text x="120" y="162" text-anchor="middle" font-size="9" fill="#6b7280">（長いLOW）</text>
+    <line x1="180" y1="80" x2="180" y2="110" stroke="#10b981" stroke-width="2"/>
+    <line x1="180" y1="110" x2="220" y2="110" stroke="#10b981" stroke-width="2"/>
+    <line x1="220" y1="110" x2="220" y2="80" stroke="#10b981" stroke-width="2"/>
+    <line x1="220" y1="80" x2="240" y2="80" stroke="#10b981" stroke-width="2"/>
+    <text x="200" y="150" text-anchor="middle" font-size="9" fill="#10b981">プレゼンス</text>
+    <text x="200" y="162" text-anchor="middle" font-size="9" fill="#6b7280">（応答）</text>
+    <line x1="260" y1="80" x2="260" y2="130" stroke="#2563eb" stroke-width="2"/>
+    <line x1="260" y1="130" x2="280" y2="130" stroke="#2563eb" stroke-width="2"/>
+    <line x1="280" y1="130" x2="280" y2="80" stroke="#2563eb" stroke-width="2"/>
+    <line x1="280" y1="80" x2="300" y2="80" stroke="#2563eb" stroke-width="2"/>
+    <text x="280" y="150" text-anchor="middle" font-size="9" fill="#2563eb">"1"</text>
+    <text x="280" y="162" text-anchor="middle" font-size="9" fill="#6b7280">（短いLOW）</text>
+    <line x1="320" y1="80" x2="320" y2="130" stroke="#2563eb" stroke-width="2"/>
+    <line x1="320" y1="130" x2="360" y2="130" stroke="#2563eb" stroke-width="2"/>
+    <line x1="360" y1="130" x2="360" y2="80" stroke="#2563eb" stroke-width="2"/>
+    <line x1="360" y1="80" x2="380" y2="80" stroke="#2563eb" stroke-width="2"/>
+    <text x="340" y="150" text-anchor="middle" font-size="9" fill="#2563eb">"0"</text>
+    <text x="340" y="162" text-anchor="middle" font-size="9" fill="#6b7280">（長いLOW）</text>
+    <line x1="400" y1="80" x2="400" y2="130" stroke="#2563eb" stroke-width="2"/>
+    <line x1="400" y1="130" x2="420" y2="130" stroke="#2563eb" stroke-width="2"/>
+    <line x1="420" y1="130" x2="420" y2="80" stroke="#2563eb" stroke-width="2"/>
+    <line x1="420" y1="80" x2="440" y2="80" stroke="#2563eb" stroke-width="2"/>
+    <text x="420" y="150" text-anchor="middle" font-size="9" fill="#2563eb">"1"</text>
+  </svg>
+  <p class="diagram-caption">図4：1-Wire の信号イメージ。リセットパルスで通信開始を告げ、パルスの長さで 0 と 1 を区別する。</p>
+</div>
+
+<h2>4. I²C と 1-Wire の比較</h2>
+
+<table>
+  <tr><th>比較項目</th><th>I²C</th><th>1-Wire</th></tr>
+  <tr><td>配線本数（最小）</td><td>2 本（SCL + SDA）＋電源・GND</td><td>1 本（データ）＋ GND（電源不要の場合も）</td></tr>
+  <tr><td>通信速度</td><td>比較的高速（100kHz〜400kHz）</td><td>比較的遅い（16.3kHz）</td></tr>
+  <tr><td>タイミングの厳しさ</td><td>クロック線があるため比較的ゆるやか</td><td>マイコンが厳密な時間管理が必要</td></tr>
+  <tr><td>複数デバイス接続</td><td>アドレスで識別（簡単）</td><td>各デバイスに固有 ID（64bit ROM）あり</td></tr>
+  <tr><td>代表的なセンサー</td><td>DHT20、BME280、SSD1306（OLED）</td><td>DS18B20（温度）、DHT11（一部実装）</td></tr>
+  <tr><td>MicroPython 対応</td><td>標準で <code>I2C</code> クラスあり</td><td>標準ではない場合が多い（ライブラリ要）</td></tr>
+</table>
+
+<h2>5. なぜ今回は I²C（DHT20）を選んだのか</h2>
+
+<p>今回のプロジェクトでは、ELEGOO キットに入っていた DHT11（1-Wire 方式）を使う予定でした。しかし以下の理由で DHT20（I²C 方式）に変更しました：</p>
+
+<div class="step">
+  <div class="step-num">1</div>
+  <div class="step-body">
+    <h4>電圧の問題</h4>
+    <p>DHT11 は 5V 系で動作するものが多く、Pico の 3.3V GPIO へ直接接続できません。電圧変換回路が必要になり、部品と配線が増えます。</p>
+  </div>
+</div>
+
+<div class="step">
+  <div class="step-num">2</div>
+  <div class="step-body">
+    <h4>通信の信頼性</h4>
+    <p>DHT11 の 1-Wire 実装はメーカー独自で、タイミングがシビアです。I²C はクロック線（SCL）があるため、マイコン側が「今データを読むよ」とタイミングを制御でき、通信が安定しやすいです。</p>
+  </div>
+</div>
+
+<div class="step">
+  <div class="step-num">3</div>
+  <div class="step-body">
+    <h4>MicroPython のサポート</h4>
+    <p>MicroPython には <code>I2C</code> クラスが標準で組み込まれています。1-Wire は標準ではない場合が多く、追加ライブラリが必要です。</p>
+  </div>
+</div>
+
+<div class="step">
+  <div class="step-num">4</div>
+  <div class="step-body">
+    <h4>データシートの明確さ</h4>
+    <p>DHT20 のデータシートには「プルアップ抵抗 4.7kΩ」「デカップリング 0.1µF」が明確に示されています。要件がはっきりしているため、配線ミスが減ります。</p>
+  </div>
+</div>
+
+<div class="box box-ok">
+  <strong>結論：I²C（DHT20）を選んだ理由</strong><br>
+  3.3V 対応、通信が安定、MicroPython 標準サポート、データシートで外付け部品が明確。1-Wire（DHT11）より配線は 1 本多いが、全体として確実性が高い。
+</div>
+
+<h2>6. まとめ</h2>
+
+<table>
+  <tr><th>言葉</th><th>簡単な説明</th></tr>
+  <tr><td>I²C</td><td>クロック線とデータ線の 2 本で通信。複数デバイスをアドレスで区別。オープンドレイン方式でプルアップ抵抗が必要。</td></tr>
+  <tr><td>1-Wire</td><td>データ線 1 本だけで通信。配線は少ないがタイミングがシビア。電源線が不要な場合もある。</td></tr>
+  <tr><td>オープンドレイン</td><td>デバイスが LOW だけを作り、HIGH は外部のプルアップ抵抗が電源から引き上げる方式。複数デバイス共有に安全。</td></tr>
+  <tr><td>プルアップ抵抗</td><td>信号線を電源側（HIGH）に「引っ張り上げる」抵抗。I²C や 1-Wire で必須。なければ信号が不安定。</td></tr>
+  <tr><td>SCL</td><td>I²C のクロック線。マスターがタイミングを刻む。</td></tr>
+  <tr><td>SDA</td><td>I²C のデータ線。SCL のタイミングに合わせて 0/1 を送る。</td></tr>
+  <tr><td>マスター</td><td>通信の主導権を持つ側（今回は Pico）。</td></tr>
+  <tr><td>スレーブ</td><td>マスターの指示に従って応答する側（今回は DHT20）。</td></tr>
+  <tr><td>アドレス</td><td>I²C デバイスごとに決まった識別番号。DHT20 は 0x38。</td></tr>
+</table>
+
+<div class="box box-info">
+  <strong>覚えておくと便利なこと</strong><br>
+  「I²C を使う」＝「SCL と SDA の 2 本にプルアップ抵抗を入れて、マスターがアドレスを指定して話しかける」ということ。ブレッドボードで I²C デバイスを動かないときは、まずプルアップ抵抗とアドレス（<code>i2c.scan()</code>）を確認するのが鉄則です。
+</div>
+
+<footer>
+  <p>やりたいことから始める 赤外線エアコンIoT — 用語解説</p>
+</footer>
+</div>
+</body>
+</html>
