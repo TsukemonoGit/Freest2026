@@ -56,6 +56,7 @@
   @media (max-width: 600px) { h1 { font-size: 1.3rem; } .container { padding: 1rem; } }
 </style>
 <base target="_blank">
+<base target="_blank">
 </head>
 <body>
 <div class="container">
@@ -74,10 +75,10 @@
   <p><strong>やりたいこと：</strong> 家のエアコンを、スマホや自動化ルールから操作したい。</p>
   <p><strong>制約：</strong></p>
   <ul>
-    <li>エアコン自体を改造したくない（保証が切れるので）</li>
-    <li>赤外線リモコンでしか操作できない機種</li>
-    <li>電子工作はほぼ初心者。はんだ付けはまだ怖い</li>
-    <li>できれば手元にある ELEGOO Arduino スターターキットの部品を使いたい</li>
+    <li>エアコン自体は改造しない(アパート備え付けなので)</li>
+    <li>無線LANアダプター SP-WL4 約15,000円 たかい。</li>
+    <li>電子工作はほぼ初心者。はんだ付けキットは持ってない</li>
+    <li>持ってる部品が使えるなら使う、無いものは買う</li>
     <li>将来 Wi-Fi 経由でサーバーと連携したい</li>
   </ul>
 </div>
@@ -127,9 +128,65 @@
   <p class="diagram-caption">図0：「やりたいこと」→「必要な機能」→「部品」への分解</p>
 </div>
 
-<h2>1. 頭脳と通信手段を決める</h2>
+<h2>1. エアコンの赤外線信号の仕組み</h2>
 
-<h3>1-1. マイコンに求める条件</h3>
+<h3>1-1. リモコンはどうやって信号を送っているか</h3>
+
+<p>エアコンの純正リモコン（RAR-8P2）が出す赤外線信号は、人の目には見えない光の点滅です。ただし「光っている／消えている」の単純な点滅ではなく、以下の<strong>2 段階の構造</strong>になっています。</p>
+
+<ul>
+  <li><strong>搬送波（38kHz）</strong>：赤外線 LED が 38,000 回/秒の速さで点滅（変調）している。これは「光の通路」を作る役割。エアコンの受信部はこの 38kHz の変調を検出することで、「本物のリモコン信号か／外からのノイズか」を区別しています。</li>
+  <li><strong>データ信号（µs 単位のタイミング）</strong>：38kHz の光を「一定時間出す（MARK）」「一定時間止める（SPACE）」を組み合わせて、電源 ON や温度設定などの命令を表現している。MARK と SPACE の長さの組み合わせが「0」や「1」や「ヘッダー」などを表します。</li>
+</ul>
+
+<div class="diagram">
+  <svg viewBox="0 0 640 200" xmlns="http://www.w3.org/2000/svg">
+    <rect x="0" y="0" width="640" height="200" fill="#f8fafc" rx="12"/>
+    <text x="320" y="30" text-anchor="middle" font-size="13" font-weight="bold" fill="#374151">赤外線リモコン信号の構造</text>
+    <text x="40" y="60" font-size="11" font-weight="bold" fill="#991b1b">38kHz 搬送波（細かい点滅）</text>
+    <line x1="80" y1="70" x2="80" y2="85" stroke="#ef4444" stroke-width="1.5"/>
+    <line x1="80" y1="85" x2="90" y2="85" stroke="#ef4444" stroke-width="1.5"/>
+    <line x1="90" y1="85" x2="90" y2="70" stroke="#ef4444" stroke-width="1.5"/>
+    <line x1="90" y1="70" x2="100" y2="70" stroke="#ef4444" stroke-width="1.5"/>
+    <line x1="100" y1="70" x2="100" y2="85" stroke="#ef4444" stroke-width="1.5"/>
+    <line x1="100" y1="85" x2="110" y2="85" stroke="#ef4444" stroke-width="1.5"/>
+    <line x1="110" y1="85" x2="110" y2="70" stroke="#ef4444" stroke-width="1.5"/>
+    <line x1="110" y1="70" x2="120" y2="70" stroke="#ef4444" stroke-width="1.5"/>
+    <line x1="120" y1="70" x2="120" y2="85" stroke="#ef4444" stroke-width="1.5"/>
+    <line x1="120" y1="85" x2="130" y2="85" stroke="#ef4444" stroke-width="1.5"/>
+    <line x1="130" y1="85" x2="130" y2="70" stroke="#ef4444" stroke-width="1.5"/>
+    <line x1="130" y1="70" x2="140" y2="70" stroke="#ef4444" stroke-width="1.5"/>
+    <text x="110" y="98" text-anchor="middle" font-size="9" fill="#6b7280">1 周期 ≒ 26µs</text>
+    <text x="40" y="125" font-size="11" font-weight="bold" fill="#2563eb">データ信号（µs単位のON/OFF）</text>
+    <line x1="80" y1="135" x2="80" y2="165" stroke="#2563eb" stroke-width="3"/>
+    <line x1="80" y1="165" x2="200" y2="165" stroke="#2563eb" stroke-width="3"/>
+    <line x1="200" y1="165" x2="200" y2="135" stroke="#2563eb" stroke-width="3"/>
+    <line x1="200" y1="135" x2="240" y2="135" stroke="#2563eb" stroke-width="3"/>
+    <line x1="240" y1="135" x2="240" y2="165" stroke="#2563eb" stroke-width="3"/>
+    <line x1="240" y1="165" x2="320" y2="165" stroke="#2563eb" stroke-width="3"/>
+    <line x1="320" y1="165" x2="320" y2="135" stroke="#2563eb" stroke-width="3"/>
+    <line x1="320" y1="135" x2="360" y2="135" stroke="#2563eb" stroke-width="3"/>
+    <text x="140" y="180" text-anchor="middle" font-size="10" fill="#1e3a8a">MARK（光を出す）</text>
+    <text x="280" y="180" text-anchor="middle" font-size="10" fill="#1e3a8a">SPACE（光を止める）</text>
+    <text x="340" y="180" text-anchor="middle" font-size="10" fill="#1e3a8a">MARK</text>
+    <text x="450" y="155" font-size="10" fill="#6b7280">搬送波の上に</text>
+    <text x="450" y="168" font-size="10" fill="#6b7280">「どれだけ長く光るか」</text>
+    <text x="450" y="181" font-size="10" fill="#6b7280">というデータを乗せる</text>
+  </svg>
+  <p class="diagram-caption">図1：赤外線リモコン信号は 38kHz の搬送波の上に、µs 単位の MARK/SPACE パターンでデータを乗せている。</p>
+</div>
+
+<p>つまり、エアコンのリモコン信号を再現するには、<strong>µs（マイクロ秒）単位で正確に「いつ光を出すか／止めるか」を制御できる</strong>必要があります。これがマイコン選定の核心条件の一つになります。</p>
+
+<h3>1-2. なぜ「学習方式」を取るのか</h3>
+
+<p>日立の純正リモコン RAR-8P2 の通信プロトコル（どのタイミングでどのデータを送るか）は公開されていません。そのため、プロトコルを解析するのではなく、純正リモコンが実際に出す信号の MARK/SPACE の時間列をそのまま記録して、同じ時間列を再送信する<strong>「学習方式」</strong>を取ります。</p>
+
+<p>この方式では、プロトコルの詳細を知らなくても動作しますが、その分、µs 単位のタイミングを忠実に記録・再現できるマイコンが必要です。</p>
+
+<h2>2. 頭脳と通信手段を決める</h2>
+
+<h3>2-1. マイコンに求める条件</h3>
 
 <p>まず、装置の「頭脳」となるマイコンを選びます。求める条件を整理します：</p>
 
@@ -138,11 +195,165 @@
   <li><strong>温度・湿度を読める</strong> → I²C や 1-Wire などのデジタル通信が使える</li>
   <li><strong>将来 Wi-Fi でサーバーと話したい</strong> → Wi-Fi 内蔵が理想。外付けモジュールは配線が増える</li>
   <li><strong>3.3V 系</strong> → 最近のセンサーは 3.3V が主流。5V 系だと電圧変換が面倒</li>
-  <li><strong>MicroPython で書きたい</strong> → 文法が Python に近く、初心者にも敷居が低い</li>
   <li><strong>安価で入手しやすい</strong> → 失敗しても気軽に買い直せる</li>
 </ol>
 
-<h3>1-2. データシートを確認するとどうなっているか</h3>
+<h3>2-2. 候補マイコンの比較検討</h3>
+
+<p>条件が決まったので、実際に市場にあるマイコンをいくつかピックアップして比較します。今回の用途に対して「過剰」「適切」「不足」の観点で評価します。</p>
+
+<table>
+  <tr>
+    <th>評価項目</th>
+    <th>ESP32-DevKitC</th>
+    <th>Arduino Uno R4 WiFi</th>
+    <th>Raspberry Pi Pico 2 WH</th>
+    <th>Seeed XIAO ESP32C3</th>
+  </tr>
+  <tr>
+    <td>Wi-Fi</td>
+    <td>内蔵</td>
+    <td>内蔵</td>
+    <td>内蔵</td>
+    <td>内蔵</td>
+  </tr>
+  <tr>
+    <td>GPIO 電圧</td>
+    <td>3.3V<br>（一部 5V トレラント）</td>
+    <td>5V<br>（3.3V ピンもあり）</td>
+    <td>3.3V 固定</td>
+    <td>3.3V 固定</td>
+  </tr>
+  <tr>
+    <td>IR の µs 制御</td>
+    <td>RMT peripheral<br>（やや複雑）</td>
+    <td>ソフトウェアタイマー<br>（Wi-Fi 併用時注意）</td>
+    <td>PIO<br>（最も柔軟）</td>
+    <td>タイマー制御<br>（限定的）</td>
+  </tr>
+  <tr>
+    <td>I²C / 1-Wire</td>
+    <td>有り</td>
+    <td>有り</td>
+    <td>有り</td>
+    <td>有り</td>
+  </tr>
+  <tr>
+    <td>開発環境</td>
+    <td>Arduino IDE /<br>MicroPython / ESP-IDF</td>
+    <td>Arduino IDE</td>
+    <td>MicroPython /<br>C++ (Pico SDK)</td>
+    <td>Arduino IDE</td>
+  </tr>
+  <tr>
+    <td>ブレッドボード実装</td>
+    <td>△（幅がやや広い）</td>
+    <td>×（大きすぎる）</td>
+    <td>○（標準的）</td>
+    <td>◎（小型）</td>
+  </tr>
+  <tr>
+    <td>価格帯</td>
+    <td>800〜1,200 円</td>
+    <td>4,000〜5,000 円</td>
+    <td>1,200〜1,500 円</td>
+    <td>600〜800 円</td>
+  </tr>
+  <tr>
+    <td>情報量・サンプル</td>
+    <td>圧倒的に多い</td>
+    <td>多い（R4 はやや少ない）</td>
+    <td>増えている</td>
+    <td>やや少ない</td>
+  </tr>
+  <tr>
+    <td>手持ち部品相性</td>
+    <td>△（5V 部品要確認）</td>
+    <td>◎（5V そのまま）</td>
+    <td>△（5V 部品要確認）</td>
+    <td>△（5V 部品要確認）</td>
+  </tr>
+</table>
+
+<h4>ESP32-DevKitC</h4>
+
+<p>Wi-Fi/Bluetooth 内蔵でコスパが非常に高く、Arduino IDE の情報量は圧倒的です。IR 送受信用の <strong>IRremote</strong> ライブラリが充実しており、「ライブラリを使えば楽に IR が動かせる」という点では最有力です。</p>
+
+<p>ただし、µs 単位の精密な GPIO 制御には <strong>RMT（Remote Control）peripheral</strong> を使う必要があり、Arduino のライブラリに隠蔽されがちで「内部でどう動いているか」がブラックボックスになりやすいです。また、一部の GPIO は 5V トレラントですがどれがトレラントか判別しにくく、初心者が間違えると壊すリスクがあります。</p>
+
+<div class="box">
+  <strong>評価：</strong>コスパと情報量は最高。ただし IR の精密制御と 3.3V/5V の区別が初心者にはややハードル。
+</div>
+
+<h4>Arduino Uno R4 WiFi</h4>
+
+<p>5V 系なので、手持ちの 5V 部品（ELEGOO キットなど）がそのまま使えるのが大きなメリットです。Wi-Fi も内蔵しています。</p>
+
+<p>一方で、ボードが大きくブレッドボード実装がしにくい（1 つのブレッドボードに収まりにくい）、価格が 4,000 円以上と高い、3.3V センサー（DHT20 など）にはレベル変換が必要、といった欠点があります。また、Wi-Fi 処理中にソフトウェアタイマーが乱れる可能性があり、µs 単位の IR 制御との両立に注意が必要です。</p>
+
+<div class="box">
+  <strong>評価：</strong>5V 部品相性は最高だが、価格・サイズ・3.3V センサー対応で今回の用途にはやや過剰／不向き。
+</div>
+
+<h4>Seeed XIAO ESP32C3</h4>
+
+<p>小型（ブレッドボードに刺しやすい）で安価（600 円台）。Wi-Fi/Bluetooth 内蔵です。</p>
+
+<p>ただし、GPIO 数が少なく（11 本）、今後の拡張性に乏しいです。IR 送受信・温湿度センサー・スイッチ・LED といった今回の構成ならギリギリ収まりますが、将来の第 2 部でサーバー連携や追加センサーを考えるとピン不足になりやすいです。</p>
+
+<div class="box">
+  <strong>評価：</strong>小型・安価で魅力的だが、GPIO 数の不足が今回の用途ではネック。
+</div>
+
+<h4>Raspberry Pi Pico 2 WH</h4>
+
+<p>Wi-Fi 内蔵、3.3V 固定で部品選定がシンプルです。最大の強みは <strong>PIO（Programmable I/O）</strong> で、µs 単位の GPIO 制御が非常に柔軟に行えます。IR 信号のような「正確なタイミングで HIGH/LOW を切り替える」処理に最適です。</p>
+
+<p>ただし、ESP32 に比べると Arduino IDE 周辺の情報量はまだ少なく、IR 用の完成度の高いライブラリも少ないため、自分で波形を組み立てる必要があります。</p>
+
+<div class="box">
+  <strong>評価：</strong>IR 制御と 3.3V 統一の観点で最も適切。ただし情報量は ESP32 に劣り、自分で調べて実装する覚悟が必要。
+</div>
+
+<h3>2-3. なぜ Pico 2 WH になったのか</h3>
+
+<p>比較検討の結果、今回のプロジェクトでは <strong>Raspberry Pi Pico 2 WH</strong> を選びました。ただし、これは「Pico が絶対的に優れている」という意味ではなく、<strong>今回の条件に最も合致した</strong>ということです。</p>
+
+<table>
+  <tr><th>今回重視した条件</th><th>Pico 2 WH の適合度</th><th>他の候補との比較</th></tr>
+  <tr>
+    <td>IR 信号を µs 単位で正確に送受信したい</td>
+    <td>◎ PIO で最も柔軟に制御可能</td>
+    <td>ESP32 は RMT で可能だが設定が複雑。Arduino は Wi-Fi 併用時にタイミングが乱れるリスク。</td>
+  </tr>
+  <tr>
+    <td>部品選定をシンプルにしたい</td>
+    <td>◎ 3.3V 固定で統一しやすい</td>
+    <td>ESP32 は「一部 5V トレラント」で判別が面倒。Arduino は 5V/3.3V の混在が必須。</td>
+  </tr>
+  <tr>
+    <td>ブレッドボードで試行錯誤したい</td>
+    <td>○ 標準的なサイズ</td>
+    <td>Arduino は大きすぎる。XIAO は小さすぎて拡張性に乏しい。</td>
+  </tr>
+  <tr>
+    <td>将来 Wi-Fi でサーバー連携したい</td>
+    <td>○ CYW43439 内蔵</td>
+    <td>ESP32 も同様に内蔵。Arduino R4 も内蔵。</td>
+  </tr>
+  <tr>
+    <td>予算を抑えたい</td>
+    <td>○ 1,000 円台</td>
+    <td>ESP32・XIAO の方が安いが、今回の用途では機能的に不足／過剰。</td>
+  </tr>
+</table>
+
+<div class="box box-ok">
+  <strong>選定：Raspberry Pi Pico 2 WH</strong><br>
+  理由：IR の µs 制御（PIO）と 3.3V 統一という今回の核心要件に最も合致。Wi-Fi 内蔵で第 2 部のサーバー連携も見据えられる。ただし、ESP32 も有力な選択肢であり、「Arduino IDE の豊富なライブラリで楽をしたい」「5V 部品をそのまま使いたい」なら ESP32 を選ぶのも正当な判断です。
+</div>
+
+<h3>2-4. データシートを確認するとどうなっているか</h3>
 
 <div class="ds-quote">
   <div class="ds-quote-title">Raspberry Pi Pico 2 W データシート（Raspberry Pi Ltd.）確認結果</div>
@@ -162,7 +373,7 @@
   理由：Wi-Fi 内蔵、3.3V 系、MicroPython 対応、PIO あり、安価。将来の第2部（サーバー連携）も見据えて WH（Wireless + ヘッダー付き）を選ぶ。
 </div>
 
-<h3>1-3. GPIO って何？</h3>
+<h3>2-5. GPIO って何？</h3>
 
 <p>部品を選んでいく中で「このピンを <strong>GPIO</strong> に接続する」という言葉が何度も出てきます。ここで軽く整理しておきます。</p>
 
@@ -232,7 +443,7 @@
   <p class="diagram-caption">図1-2：GPIO はマイコンの「手」（OUTPUT）と「目」（INPUT）。今回は GP4/GP5/GP15/GP16/GP18 を使う。</p>
 </div>
 
-<h3>1-3. 電圧の世界観を固定する</h3>
+<h3>2-6. 電圧の世界観を固定する</h3>
 
 <p>Pico 2 WH を選んだ時点で、装置全体の電圧基準が <strong>3.3V</strong> に決まります。これは非常に重要な分岐点です。</p>
 
@@ -244,25 +455,6 @@
 <p>この時点で、手元にある ELEGOO Arduino キットの部品を見直します。キットに入っている DHT11 や 5V 用 IR 受信モジュールは「そのまま」では使えません。電圧変換回路を追加するか、3.3V 対応の部品に置き換えるかの選択が生じます。</p>
 
 <p>今回は「電圧変換を覚えるより、3.3V で動く部品を選ぶ方が早い」という判断で、不足部品のみ追加購入する方針を取ります。</p>
-
-<h2>2. エアコンの信号を「読む」仕組みを考える</h2>
-
-<h3>2-1. エアコンはどうやってリモコンの信号を受け取っているか</h3>
-
-<p>エアコンのリモコンは、人の目には見えない<strong>赤外線（IR）LED</strong>を高速で点滅させて信号を送っています。その点滅のパターン（どれだけ長く光る／消える）が「電源ON」「26℃」などの命令を表しています。</p>
-
-<p>この信号を読むには、赤外線を電気信号に変換する<strong>受信モジュール</strong>が必要です。ただし、赤外線 LED はただ「光っている」だけではなく、<strong>38kHz という周波数で高速点滅（変調）</strong>しています。受信側はこの 38kHz の変調を検出して、「光が来ている／来ていない」をデジタル信号（HIGH/LOW）として出力してくれると便利です。</p>
-
-<h3>2-2. 受信モジュールの選定条件</h3>
-
-<ul>
-  <li>38kHz 帯の変調信号を復調できる</li>
-  <li>3.3V で動作する（Pico に直結したい）</li>
-  <li>出力が 3.3V レベル（Pico の GPIO に安全）</li>
-  <li>入手しやすく、データシートが公開されている</li>
-</ul>
-
-<p>これに当てはまるのが <strong>PL-IRM1838B</strong> です。次章でデータシートを確認し、配線を決めます。</p>
 
 <div class="pager"><a href="../index.html">← TOP</a><span></span><a href="page2.html">第2章：赤外線受信の仕組みへ →</a></div>
 <footer>
