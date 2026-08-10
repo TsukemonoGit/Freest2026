@@ -76,8 +76,8 @@ title: "やりたいことから始める 赤外線エアコンIoT (1/5)"
 <p>エアコンの純正リモコン（RAR-8P2）が出す赤外線信号は、人の目には見えない光の点滅です。ただし「光っている／消えている」の単純な点滅ではなく、以下の<strong>2 段階の構造</strong>になっています。</p>
 
 <ul>
-  <li><strong>搬送波（38kHz）</strong>：赤外線 LED が 38,000 回/秒の速さで点滅（変調）している。これは「光の通路」を作る役割。エアコンの受信部はこの 38kHz の変調を検出することで、「本物のリモコン信号か／外からのノイズか」を区別しています。</li>
-  <li><strong>データ信号（µs 単位のタイミング）</strong>：38kHz の光を「一定時間出す（MARK）」「一定時間止める（SPACE）」を組み合わせて、電源 ON や温度設定などの命令を表現している。MARK と SPACE の長さの組み合わせが「0」や「1」や「ヘッダー」などを表します。</li>
+  <li><strong>搬送波（38kHz）</strong>：赤外線 LED を約 38,000 回/秒で点滅させる搬送波。これは「光の通路」を作る役割です。エアコンの受信部はこの 38kHz の変調を検出することで、「本物のリモコン信号か／外からのノイズか」を区別しています。</li>
+  <li><strong>データ信号（µs 単位のタイミング）</strong>：38kHz の搬送波を「一定時間出す（MARK）」「一定時間止める（SPACE）」という時間パターンで制御し、電源 ON や温度設定などの命令を表現します。MARK と SPACE の長さの組み合わせが「0」や「1」や「ヘッダー」などを表します。</li>
 </ul>
 
 <div class="diagram">
@@ -98,26 +98,28 @@ title: "やりたいことから始める 赤外線エアコンIoT (1/5)"
     <line x1="130" y1="85" x2="130" y2="70" stroke="#ef4444" stroke-width="1.5"/>
     <line x1="130" y1="70" x2="140" y2="70" stroke="#ef4444" stroke-width="1.5"/>
     <text x="110" y="98" text-anchor="middle" font-size="9" fill="#6b7280">1 周期 ≒ 26µs</text>
-    <text x="40" y="125" font-size="11" font-weight="bold" fill="#2563eb">データ信号（µs単位のON/OFF）</text>
-    <line x1="80" y1="135" x2="80" y2="165" stroke="#2563eb" stroke-width="3"/>
-    <line x1="80" y1="165" x2="200" y2="165" stroke="#2563eb" stroke-width="3"/>
-    <line x1="200" y1="165" x2="200" y2="135" stroke="#2563eb" stroke-width="3"/>
-    <line x1="200" y1="135" x2="240" y2="135" stroke="#2563eb" stroke-width="3"/>
-    <line x1="240" y1="135" x2="240" y2="165" stroke="#2563eb" stroke-width="3"/>
-    <line x1="240" y1="165" x2="320" y2="165" stroke="#2563eb" stroke-width="3"/>
-    <line x1="320" y1="165" x2="320" y2="135" stroke="#2563eb" stroke-width="3"/>
-    <line x1="320" y1="135" x2="360" y2="135" stroke="#2563eb" stroke-width="3"/>
-    <text x="140" y="180" text-anchor="middle" font-size="10" fill="#1e3a8a">MARK（光を出す）</text>
-    <text x="280" y="180" text-anchor="middle" font-size="10" fill="#1e3a8a">SPACE（光を止める）</text>
-    <text x="340" y="180" text-anchor="middle" font-size="10" fill="#1e3a8a">MARK</text>
-    <text x="450" y="155" font-size="10" fill="#6b7280">搬送波の上に</text>
-    <text x="450" y="168" font-size="10" fill="#6b7280">「どれだけ長く光るか」</text>
-    <text x="450" y="181" font-size="10" fill="#6b7280">というデータを乗せる</text>
+    <text x="40" y="125" font-size="11" font-weight="bold" fill="#2563eb">データ信号（MARK / SPACE）</text>
+    <line x1="80" y1="175" x2="80" y2="145" stroke="#2563eb" stroke-width="3"/>
+    <line x1="80" y1="145" x2="200" y2="145" stroke="#2563eb" stroke-width="3"/>
+    <line x1="200" y1="145" x2="200" y2="175" stroke="#2563eb" stroke-width="3"/>
+    <line x1="200" y1="175" x2="240" y2="175" stroke="#2563eb" stroke-width="3"/>
+    <line x1="240" y1="175" x2="240" y2="145" stroke="#2563eb" stroke-width="3"/>
+    <line x1="240" y1="145" x2="320" y2="145" stroke="#2563eb" stroke-width="3"/>
+    <line x1="320" y1="145" x2="320" y2="175" stroke="#2563eb" stroke-width="3"/>
+    <line x1="320" y1="175" x2="360" y2="175" stroke="#2563eb" stroke-width="3"/>
+    <text x="140" y="135" text-anchor="middle" font-size="10" fill="#1e3a8a">MARK（搬送波あり）</text>
+    <text x="220" y="190" text-anchor="middle" font-size="10" fill="#1e3a8a">SPACE（搬送波なし）</text>
+    <text x="280" y="135" text-anchor="middle" font-size="10" fill="#1e3a8a">MARK</text>
+    <text x="450" y="165" font-size="10" fill="#6b7280">MARK = 38kHz搬送波を出す</text>
+    <text x="450" y="178" font-size="10" fill="#6b7280">SPACE = 38kHz搬送波を止める</text>
+    <text x="450" y="191" font-size="10" fill="#6b7280">長さの組み合わせがデータになる</text>
   </svg>
-  <p class="diagram-caption">図1：赤外線リモコン信号は 38kHz の搬送波の上に、µs 単位の MARK/SPACE パターンでデータを乗せている。</p>
+  <p class="diagram-caption">図1：赤外線リモコン信号は、38kHz の搬送波を出す MARK と、搬送波を止める SPACE の時間パターンでデータを表現する。</p>
 </div>
 
-<p>つまり、エアコンのリモコン信号を再現するには、<strong>µs（マイクロ秒）単位で正確に「いつ光を出すか／止めるか」を制御できる</strong>必要があります。これがマイコン選定の核心条件の一つになります。</p>
+<p>ここで、<strong>MARK / SPACE と HIGH / LOW は同じものではない</strong>ことに注意が必要です。MARK は「38kHz の搬送波を出している時間」、SPACE は「搬送波を止めている時間」を表す用語です。マイコンの GPIO では、実装上 MARK を HIGH、SPACE を LOW として扱うことが多いですが、これは電気的な論理レベルの話であり、MARK / SPACE そのものが HIGH / LOW を定義しているわけではありません。</p>
+
+<p>つまり、エアコンのリモコン信号を再現するには、<strong>µs（マイクロ秒）単位で正確に「いつ 38kHz の搬送波を出すか／止めるか」を制御できる</strong>必要があります。これがマイコン選定の核心条件の一つになります。</p>
 
 <h3>1-2. なぜ「学習方式」を取るのか</h3>
 
