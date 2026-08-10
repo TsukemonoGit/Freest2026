@@ -2,8 +2,8 @@
   items:
     - title: 第一部 自由研究資料
       url: /
-    - title: 座学編
-      url: /zagaku.html
+#     - title: 座学編
+#       url: /zagaku.html
 - group: やりたいことから始める
   items:
     - title: 第1章 目的とマイコン選定
