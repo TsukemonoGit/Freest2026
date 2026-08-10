@@ -1,0 +1,24 @@
+- group: 本編
+  items:
+    - title: 第一部 自由研究資料
+      url: /
+    - title: 座学編
+      url: /zagaku.html
+- group: やりたいことから始める
+  items:
+    - title: 第1章 目的とマイコン選定
+      url: /yaritai/page1.html
+    - title: 第2章 赤外線受信の仕組み
+      url: /yaritai/page2.html
+    - title: 第3章 赤外線送信の仕組み
+      url: /yaritai/page3.html
+    - title: 第4章 温湿度測定と手動入力
+      url: /yaritai/page4.html
+    - title: 第5章 全体像と実験ステップ
+      url: /yaritai/page5.html
+- group: コラム
+  items:
+    - title: 通信の基礎（I²Cと1-Wire）
+      url: /yaritai/page6.html
+    - title: データシートの読み方
+      url: /yaritai/datasheet.html

@@ -1,68 +1,10 @@
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>コラム：データシートの読み方</title>
-<style>
-  :root {
-    --bg: #fafafa; --text: #1a1a1a; --muted: #555;
-    --accent: #2563eb; --accent-light: #dbeafe; --border: #e5e7eb;
-    --code-bg: #f3f4f6; --warn: #f59e0b; --warn-bg: #fffbeb;
-    --ok: #10b981; --ok-bg: #ecfdf5; --danger: #ef4444; --danger-bg: #fee2e2;
-  }
-  * { box-sizing: border-box; }
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    background: var(--bg); color: var(--text); line-height: 1.7; margin: 0; padding: 0;
-  }
-  .container { max-width: 880px; margin: 0 auto; padding: 2rem 1.5rem; }
-  header { text-align: center; padding: 2rem 0 1.5rem; border-bottom: 2px solid var(--border); margin-bottom: 2rem; }
-  h1 { font-size: 1.7rem; margin: 0 0 0.5rem; letter-spacing: -0.02em; }
-  .subtitle { color: var(--muted); font-size: 1rem; }
-  h2 { font-size: 1.3rem; margin-top: 2.5rem; margin-bottom: 1rem; padding-bottom: 0.3rem; border-bottom: 2px solid var(--accent); display: inline-block; }
-  h3 { font-size: 1.1rem; margin-top: 2rem; color: var(--accent); }
-  h4 { font-size: 1rem; margin-top: 1.5rem; color: #374151; }
-  p { margin: 1rem 0; }
-  .lead { font-size: 1.1rem; color: var(--muted); background: var(--accent-light); padding: 1.2rem; border-radius: 8px; border-left: 4px solid var(--accent); }
-  .diagram { background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; margin: 1.5rem 0; overflow-x: auto; }
-  .diagram svg { display: block; margin: 0 auto; max-width: 100%; height: auto; }
-  .diagram-caption { text-align: center; font-size: 0.85rem; color: var(--muted); margin-top: 0.75rem; }
-  table { width: 100%; border-collapse: collapse; margin: 1.5rem 0; font-size: 0.95rem; }
-  th, td { border: 1px solid var(--border); padding: 0.6rem 0.8rem; text-align: left; }
-  th { background: var(--accent-light); font-weight: 600; }
-  tr:nth-child(even) { background: #f9fafb; }
-  code { background: var(--code-bg); padding: 0.15rem 0.35rem; border-radius: 4px; font-family: "SFMono-Regular", Consolas, monospace; font-size: 0.9em; }
-  pre { background: var(--code-bg); padding: 1rem; border-radius: 8px; overflow-x: auto; font-size: 0.9rem; }
-  .box { background: #fff; border: 1px solid var(--border); border-radius: 8px; padding: 1.2rem; margin: 1rem 0; }
-  .box-warn { background: var(--warn-bg); border-color: #fcd34d; }
-  .box-ok { background: var(--ok-bg); border-color: #6ee7b7; }
-  .box-danger { background: var(--danger-bg); border-color: #fca5a5; }
-  .box-info { background: #eff6ff; border-color: #93c5fd; }
-  .step { display: flex; gap: 1rem; align-items: flex-start; margin: 1.5rem 0; }
-  .step-num { flex-shrink: 0; width: 2.2rem; height: 2.2rem; background: var(--accent); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1rem; }
-  .step-body { flex: 1; }
-  .step-body h4 { margin: 0 0 0.4rem; font-size: 1.05rem; }
-  ul, ol { padding-left: 1.5rem; }
-  li { margin: 0.4rem 0; }
-  .highlight { background: linear-gradient(transparent 60%, #fde047 60%); padding: 0 0.1rem; }
-  .ds-quote { background: #f0fdf4; border-left: 4px solid #22c55e; padding: 1rem; margin: 1rem 0; border-radius: 0 8px 8px 0; }
-  .ds-quote-title { font-weight: bold; color: #15803d; margin-bottom: 0.5rem; }
-  .pager { display: flex; justify-content: center; margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid var(--border); }
-  .pager a { color: var(--accent); text-decoration: none; font-weight: 600; }
-  .pager a:hover { text-decoration: underline; }
-  .pager .disabled { color: #9ca3af; pointer-events: none; }
-  footer { text-align: center; margin-top: 3rem; padding: 2rem 0; color: var(--muted); font-size: 0.85rem; border-top: 1px solid var(--border); }
-  @media (max-width: 600px) { h1 { font-size: 1.3rem; } .container { padding: 1rem; } }
-</style>
+---
+layout: default
+title: "コラム：データシートの読み方"
+---
 
-</head>
-<body>
-<div class="container">
-<header>
-  <h1>コラム：データシートの読み方</h1>
-  <p class="subtitle">部品選定の根拠を、公式資料で確認する方法</p>
-</header>
+<h1>コラム：データシートの読み方</h1>
+<p class="subtitle">部品選定の根拠を、公式資料で確認する方法</p>
 
 <p class="lead">
   本シリーズでは各章で部品を選ぶたび、必ずメーカーのデータシートを確認している。ここでは「データシートとは何か」「どこから入手するか」「どこを読めば必要な情報にたどり着けるか」を独立したコラムとしてまとめる。
@@ -247,14 +189,3 @@
     <p>「DHT20モジュール」と「DHT20単体」では、前者はプルアップ抵抗やコンデンサが基板上に実装済みの場合がある。データシートがどちらを対象にしているか（センサー単体か、実装済み基板か）を確認しないと、外付け部品の要否を誤る。</p>
   </div>
 </div>
-
-<div class="pager">
-  <a href="../index.html">← TOP</a>
-</div>
-<footer>
-  <p>やりたいことから始める 赤外線エアコンIoT — 思考の流れ版（コラム）</p>
-  <p style="font-size:0.8rem; margin-top:0.5rem;">対象機種：日立 白くまくん RAS-AJ3626S / リモコン RAR-8P2</p>
-</footer>
-</div>
-</body>
-</html>

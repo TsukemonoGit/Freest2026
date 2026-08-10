@@ -1,24 +1,12 @@
-<!doctype html>
-<html lang="ja">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>第一部 自由研究資料 Pico 2 WHでつくる赤外線エアコンIoT</title>
-<style>
-body{font-family:system-ui,-apple-system,"Noto Sans JP",sans-serif;line-height:1.72;max-width:1050px;margin:36px auto;padding:0 24px;color:#222}
-h1{font-size:30px;border-bottom:2px solid #222;padding-bottom:8px}h2{font-size:23px;border-bottom:1px solid #aaa;padding-bottom:5px;margin-top:42px}h3{font-size:18px;margin-top:28px}
-table{border-collapse:collapse;width:100%;margin:14px 0}th,td{border:1px solid #999;padding:8px 10px;vertical-align:top}th{background:#eee}
-code{background:#f2f2f2;padding:1px 4px}pre{background:#f4f4f4;border:1px solid #ccc;padding:14px;overflow:auto;line-height:1.45}
-.note{border-left:4px solid #555;background:#f6f6f6;padding:10px 14px;margin:14px 0}.warn{border-left:4px solid #b00;background:#fff4f4;padding:10px 14px;margin:14px 0}.ok{border-left:4px solid #287a34;background:#f2fff4;padding:10px 14px;margin:14px 0}
-svg{max-width:100%;height:auto;border:1px solid #ccc;background:white;margin:10px 0 20px}.small{font-size:13px;color:#555}.mono{font-family:ui-monospace,SFMono-Regular,Consolas,monospace}
-@media print{body{max-width:none;margin:12mm;padding:0}svg,table,pre{break-inside:avoid}h2,h3{break-after:avoid}}
-</style>
-</head>
-<body>
+---
+layout: default
+title: "第一部 自由研究資料 Pico 2 WHでつくる赤外線エアコンIoT"
+---
+
 <h1>第一部　Raspberry Pi Pico 2 WHでつくる赤外線エアコンIoT</h1>
 <p>この資料では、Raspberry Pi Pico 2 WHを中心に、赤外線受信・赤外線送信・温湿度測定・タクトスイッチを組み合わせ、対象エアコン <strong>日立 白くまくん RAS-AJ3626S</strong> の純正リモコン信号を学習して再送信できる装置を作る。電子工作の経験がほとんどない状態からでも、「何をどこへつなぐか」「なぜその部品が必要か」「何を確認すれば成功か」が分かる順番で進める。</p>
 
-<a href="./zagaku">→座学</a>
+<a href="zagaku.html">→座学</a>
 <a href="./yaritai/page1.html">→やりたい</a>
 <h2>1. 研究の目的</h2>
 <p>家にあるELEGOO Arduino UNO R3スターターキットの部品をできるだけ再利用し、不足する部品だけを追加購入して、エアコンを赤外線で操作できるIoT装置を作る。</p>
@@ -318,5 +306,3 @@ while True:
 <li><a href="https://akizukidenshi.com/catalog/g/g110147/">秋月電子 110147 0.1µF セラミックコンデンサ</a>：DHT20の100nFデカップリング用。</li>
 </ul>
 <p class="small">この資料では、手元の5kΩ・2kΩ・330Ωを利用し、まず安全側の電流で一つずつ動作確認する。IR LEDの到達距離を伸ばすために抵抗値を小さくする場合は、LEDの連続・パルス定格、デューティ比、BC337-40BUのベース電流とコレクタ電流を確認してから変更する。</p>
-</body>
-</html>

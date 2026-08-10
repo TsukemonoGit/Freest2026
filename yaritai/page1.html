@@ -1,68 +1,10 @@
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>やりたいことから始める 赤外線エアコンIoT (1/5)</title>
-<style>
-  :root {
-    --bg: #fafafa; --text: #1a1a1a; --muted: #555;
-    --accent: #2563eb; --accent-light: #dbeafe; --border: #e5e7eb;
-    --code-bg: #f3f4f6; --warn: #f59e0b; --warn-bg: #fffbeb;
-    --ok: #10b981; --ok-bg: #ecfdf5; --danger: #ef4444; --danger-bg: #fee2e2;
-  }
-  * { box-sizing: border-box; }
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    background: var(--bg); color: var(--text); line-height: 1.7; margin: 0; padding: 0;
-  }
-  .container { max-width: 880px; margin: 0 auto; padding: 2rem 1.5rem; }
-  header { text-align: center; padding: 2rem 0 1.5rem; border-bottom: 2px solid var(--border); margin-bottom: 2rem; }
-  h1 { font-size: 1.7rem; margin: 0 0 0.5rem; letter-spacing: -0.02em; }
-  .subtitle { color: var(--muted); font-size: 1rem; }
-  h2 { font-size: 1.3rem; margin-top: 2.5rem; margin-bottom: 1rem; padding-bottom: 0.3rem; border-bottom: 2px solid var(--accent); display: inline-block; }
-  h3 { font-size: 1.1rem; margin-top: 2rem; color: var(--accent); }
-  h4 { font-size: 1rem; margin-top: 1.5rem; color: #374151; }
-  p { margin: 1rem 0; }
-  .lead { font-size: 1.1rem; color: var(--muted); background: var(--accent-light); padding: 1.2rem; border-radius: 8px; border-left: 4px solid var(--accent); }
-  .diagram { background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; margin: 1.5rem 0; overflow-x: auto; }
-  .diagram svg { display: block; margin: 0 auto; max-width: 100%; height: auto; }
-  .diagram-caption { text-align: center; font-size: 0.85rem; color: var(--muted); margin-top: 0.75rem; }
-  table { width: 100%; border-collapse: collapse; margin: 1.5rem 0; font-size: 0.95rem; }
-  th, td { border: 1px solid var(--border); padding: 0.6rem 0.8rem; text-align: left; }
-  th { background: var(--accent-light); font-weight: 600; }
-  tr:nth-child(even) { background: #f9fafb; }
-  code { background: var(--code-bg); padding: 0.15rem 0.35rem; border-radius: 4px; font-family: "SFMono-Regular", Consolas, monospace; font-size: 0.9em; }
-  pre { background: var(--code-bg); padding: 1rem; border-radius: 8px; overflow-x: auto; font-size: 0.9rem; }
-  .box { background: #fff; border: 1px solid var(--border); border-radius: 8px; padding: 1.2rem; margin: 1rem 0; }
-  .box-warn { background: var(--warn-bg); border-color: #fcd34d; }
-  .box-ok { background: var(--ok-bg); border-color: #6ee7b7; }
-  .box-danger { background: var(--danger-bg); border-color: #fca5a5; }
-  .box-info { background: #eff6ff; border-color: #93c5fd; }
-  .step { display: flex; gap: 1rem; align-items: flex-start; margin: 1.5rem 0; }
-  .step-num { flex-shrink: 0; width: 2.2rem; height: 2.2rem; background: var(--accent); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1rem; }
-  .step-body { flex: 1; }
-  .step-body h4 { margin: 0 0 0.4rem; font-size: 1.05rem; }
-  ul, ol { padding-left: 1.5rem; }
-  li { margin: 0.4rem 0; }
-  .highlight { background: linear-gradient(transparent 60%, #fde047 60%); padding: 0 0.1rem; }
-  .ds-quote { background: #f0fdf4; border-left: 4px solid #22c55e; padding: 1rem; margin: 1rem 0; border-radius: 0 8px 8px 0; }
-  .ds-quote-title { font-weight: bold; color: #15803d; margin-bottom: 0.5rem; }
-  .pager { display: flex; justify-content: space-between; margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid var(--border); }
-  .pager a { color: var(--accent); text-decoration: none; font-weight: 600; }
-  .pager a:hover { text-decoration: underline; }
-  .pager .disabled { color: #9ca3af; pointer-events: none; }
-  footer { text-align: center; margin-top: 3rem; padding: 2rem 0; color: var(--muted); font-size: 0.85rem; border-top: 1px solid var(--border); }
-  @media (max-width: 600px) { h1 { font-size: 1.3rem; } .container { padding: 1rem; } }
-</style>
+---
+layout: default
+title: "やりたいことから始める 赤外線エアコンIoT (1/5)"
+---
 
-</head>
-<body>
-<div class="container">
-<header>
-  <h1>やりたいことから始める 赤外線エアコンIoT (1/5)</h1>
-  <p class="subtitle">第1章：目的の設定とマイコンの選定 — なぜ Pico 2 WH なのか</p>
-</header>
+<h1>やりたいことから始める 赤外線エアコンIoT (1/5)</h1>
+<p class="subtitle">第1章：目的の設定とマイコンの選定 — なぜ Pico 2 WH なのか</p>
 
 <p class="lead">
   このシリーズは「部品リストが先にあって、それをどう配線するか」を説明するのではなく、<strong>「やりたいこと」から出発して、必要な機能を分解し、一つずつ部品を選び、回路を組んでいく</strong>思考プロセスを追います。
@@ -454,12 +396,3 @@
 <p>この時点で、手元にある ELEGOO Arduino キットの部品を見直します。キットに入っている DHT11 や 5V 用 IR 受信モジュールは「そのまま」では使えません。電圧変換回路を追加するか、3.3V 対応の部品に置き換えるかの選択が生じます。</p>
 
 <p>今回は「電圧変換を覚えるより、3.3V で動く部品を選ぶ方が早い」という判断で、不足部品のみ追加購入する方針を取ります。</p>
-
-<div class="pager"><a href="../index.html">← TOP</a><span></span><a href="page2.html">第2章：赤外線受信の仕組みへ →</a></div>
-<footer>
-  <p>やりたいことから始める 赤外線エアコンIoT — 思考の流れ版</p>
-  <p style="font-size:0.8rem; margin-top:0.5rem;">対象機種：日立 白くまくん RAS-AJ3626S / リモコン RAR-8P2</p>
-</footer>
-</div>
-</body>
-</html>

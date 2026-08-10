@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% if page.title %}{{ page.title }} — Freest2026{% else %}Freest2026{% endif %}</title>
+<link rel="stylesheet" href="{{ '/assets/css/style.css' | relative_url }}">
+</head>
+<body>
+<header class="site-header">
+  <div class="site-brand">
+    <a href="{{ '/' | relative_url }}">Freest2026 <span class="site-brand-sub">赤外線エアコンIoT 自由研究</span></a>
+  </div>
+</header>
+<div class="layout">
+  <aside class="sidebar">
+    <div class="sidebar-title">目次</div>
+    <nav class="site-nav" aria-label="サイト内ナビゲーション">
+      {% include toc.html %}
+    </nav>
+  </aside>
+  <main class="container">
+{{ content }}
+  </main>
+</div>
+<footer class="site-footer">
+  <p>対象機種：日立 白くまくん RAS-AJ3626S / リモコン RAR-8P2</p>
+  <p class="small">Freest2026 — Raspberry Pi Pico 2 WH でつくる赤外線エアコンIoT 自由研究</p>
+</footer>
+</body>
+</html>

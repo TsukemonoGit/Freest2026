@@ -1,0 +1,6 @@
+{% for group in site.data.navigation %}
+  <span class="nav-group">{{ group.group }}</span>
+  {% for item in group.items %}
+    <a class="nav-link{% if page.url == item.url %} active{% endif %}" href="{{ item.url | relative_url }}">{{ item.title }}</a>
+  {% endfor %}
+{% endfor %}
