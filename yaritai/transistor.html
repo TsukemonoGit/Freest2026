@@ -1,0 +1,361 @@
+---
+layout: default
+title: "トランジスタの働き — GPIOで大きい電流をON/OFFするスイッチ"
+---
+
+<h1>トランジスタの働き</h1>
+<p class="subtitle">
+  GPIOの小さい電流で、大きい電流をON/OFFする — BC337-40BUのしくみ
+</p>
+
+<div class="lead">
+  第3章でIR
+  LEDを駆動する際、GPIOから直接LEDへ電流を流す設計にせず、GPIOはBC337の<strong>Base</strong>を操作するだけにしています。<strong>なぜGPIOで直接LEDを光らせないのか。</strong>このページでは、トランジスタの基本動作から、なぜ2kΩをBaseに入れるのかまでを整理する。
+</div>
+
+<!-- ============================================================ -->
+<h2>1. なぜGPIOで直接IR LEDを駆動しないのか</h2>
+
+<p>
+  GPIOが安全に流せる電流には上限がある。一方、IR
+  LEDを十分な明るさで光らせるには、GPIOの上限に近い、あるいは超える電流が必要になる場合がある。GPIOに過大な電流を流すと、マイコン側の破損につながる。
+</p>
+
+<p>
+  そこで、GPIOには<strong>「小さい電流でON/OFFを操作するだけ」</strong>の役割を持たせ、IR
+  LEDへ流れる<strong>大きい電流</strong>は別の電源（VBUS）から別の経路で流す。この「小さい電流で大きい電流を制御する」という切り替え役を担うのがトランジスタである。
+</p>
+
+<div class="card">
+  <div class="card-title"><span class="icon">🔀</span>トランジスタの役割</div>
+  <p>
+    BC337-40BUは<strong>3本足の増幅素子</strong>で、Base（ベース）に流す小さい電流によって、Collector（コレクタ）とEmitter（エミッタ）の間に流れる大きい電流をON/OFFできる。
+  </p>
+  <p>
+    今回の回路では「増幅」というより、<strong>「GPIOで大きい電流をスイッチする」</strong>という使い方（ローサイドスイッチ）をしている。
+  </p>
+</div>
+
+<!-- ============================================================ -->
+<h2>2. 2つの電流経路 — Base側とCollector-Emitter側</h2>
+
+<p>
+  BC337を使った回路には、独立した<strong>2つの電流経路</strong>がある。この2つを分けて考えることが理解の起点になる。
+</p>
+
+<table>
+  <tr>
+    <th>経路</th>
+    <th>電流の大きさ</th>
+    <th>流れる区間</th>
+    <th>役割</th>
+  </tr>
+  <tr>
+    <td><strong>Base電流</strong></td>
+    <td>小さい（約1mA程度）</td>
+    <td>GPIO → 2kΩ → Base → Emitter → GND</td>
+    <td>トランジスタをONにする「操作用」の電流</td>
+  </tr>
+  <tr>
+    <td><strong>Collector-Emitter電流</strong></td>
+    <td>大きい（IR LEDの駆動電流）</td>
+    <td>VBUS → 330Ω → IR LED → Collector → Emitter → GND</td>
+    <td>IR LEDを実際に光らせる「主電流」</td>
+  </tr>
+</table>
+
+<p>
+  Base側にわずかな電流を流すだけで、Collector-Emitter側の大きな電流経路が「開く」。GPIOはBase側の操作だけを担当し、IR
+  LEDの主電流には一切関与しない。
+</p>
+
+<figure class="diagram">
+  <svg viewBox="0 0 720 300" xmlns="http://www.w3.org/2000/svg">
+    <rect x="0" y="0" width="720" height="300" fill="#f8fafc" rx="12" />
+    <text
+      x="360"
+      y="25"
+      text-anchor="middle"
+      font-size="14"
+      font-weight="bold"
+      fill="#374151"
+    >
+      2つの電流経路（ローサイドスイッチ）
+    </text>
+
+    <!-- 主電流経路 -->
+    <text x="30" y="55" font-size="11" font-weight="bold" fill="#991b1b">
+      主電流経路（IR LED駆動）
+    </text>
+    <text x="30" y="45" font-size="11" font-weight="bold" fill="#1e3a8a">
+      VBUS 5V
+    </text>
+    <line x1="60" y1="55" x2="60" y2="90" stroke="#2563eb" stroke-width="2" />
+    <rect
+      x="45"
+      y="90"
+      width="30"
+      height="30"
+      fill="#fee2e2"
+      stroke="#ef4444"
+      stroke-width="1.5"
+      rx="2"
+    />
+    <text x="100" y="110" font-size="10" fill="#991b1b">330Ω</text>
+    <line
+      x1="60"
+      y1="120"
+      x2="60"
+      y2="150"
+      stroke="#ef4444"
+      stroke-width="2.5"
+    />
+    <text x="90" y="145" font-size="9" fill="#991b1b">IR LED</text>
+    <line
+      x1="60"
+      y1="150"
+      x2="60"
+      y2="180"
+      stroke="#ef4444"
+      stroke-width="2.5"
+    />
+
+    <rect
+      x="30"
+      y="180"
+      width="120"
+      height="70"
+      rx="6"
+      fill="#fff"
+      stroke="#7c3aed"
+      stroke-width="2"
+    />
+    <text
+      x="90"
+      y="205"
+      text-anchor="middle"
+      font-size="11"
+      font-weight="bold"
+      fill="#5b21b6"
+    >
+      BC337-40BU
+    </text>
+    <text x="90" y="222" text-anchor="middle" font-size="9" fill="#6b7280">
+      C=Pin1 B=Pin2 E=Pin3
+    </text>
+    <text x="90" y="238" text-anchor="middle" font-size="9" fill="#374151">
+      C-E間を主電流が通過
+    </text>
+
+    <line
+      x1="60"
+      y1="180"
+      x2="60"
+      y2="195"
+      stroke="#ef4444"
+      stroke-width="2.5"
+    />
+    <text x="20" y="195" font-size="9" fill="#991b1b">C</text>
+
+    <line x1="90" y1="250" x2="90" y2="270" stroke="#374151" stroke-width="2" />
+    <text
+      x="90"
+      y="285"
+      text-anchor="middle"
+      font-size="10"
+      font-weight="bold"
+      fill="#374151"
+    >
+      GND
+    </text>
+    <text x="130" y="270" font-size="9" fill="#6b7280">E（Emitter）</text>
+
+    <!-- Base電流経路 -->
+    <text x="300" y="55" font-size="11" font-weight="bold" fill="#065f46">
+      Base電流経路（操作用）
+    </text>
+    <text x="300" y="45" font-size="10" fill="#065f46">GPIO (GP18)</text>
+    <line x1="330" y1="55" x2="330" y2="90" stroke="#10b981" stroke-width="2" />
+    <rect
+      x="315"
+      y="90"
+      width="30"
+      height="30"
+      fill="#d1fae5"
+      stroke="#10b981"
+      stroke-width="1.5"
+      rx="2"
+    />
+    <text x="370" y="110" font-size="10" fill="#065f46">2kΩ</text>
+    <line
+      x1="330"
+      y1="120"
+      x2="330"
+      y2="200"
+      stroke="#10b981"
+      stroke-width="2"
+    />
+    <line
+      x1="330"
+      y1="200"
+      x2="150"
+      y2="200"
+      stroke="#10b981"
+      stroke-width="2"
+    />
+    <text x="220" y="195" font-size="9" fill="#065f46">→ Base（Pin 2）</text>
+
+    <text x="450" y="150" font-size="10" fill="#6b7280">
+      Baseに小さい電流が流れると
+    </text>
+    <text x="450" y="168" font-size="10" fill="#6b7280">
+      C-E間が導通し、主電流が流れる
+    </text>
+
+    <line x1="330" y1="120" x2="330" y2="120" stroke="none" />
+  </svg>
+  <figcaption class="diagram-caption">
+    図1：Base側（緑・小電流）とCollector-Emitter側（赤・大電流）は独立した経路。GPIOはBase側の操作だけを担当し、IR
+    LEDの主電流には触れない。
+  </figcaption>
+</figure>
+
+<!-- ============================================================ -->
+<h2>3. なぜ「ローサイド」なのか</h2>
+
+<p>
+  BC337はIR LEDとGNDの間に置かれている。つまり負荷（IR
+  LED）の<strong>下流側（GND側）</strong>をON/OFFする配置になっている。この配置を<strong>ローサイドスイッチ</strong>と呼ぶ。
+</p>
+
+<div class="box box-info">
+  <strong>ローサイドスイッチとは</strong><br />
+  負荷（今回はIR
+  LED）を電源側に固定し、GND側との接続をトランジスタで開閉する方式。負荷の上流側（電源側）を開閉する「ハイサイドスイッチ」もあるが、NPN型トランジスタ（BC337など）は構造上ローサイドで使うほうが単純な回路になりやすい。
+</div>
+
+<!-- ============================================================ -->
+<h2>4. Pin配置の確認</h2>
+
+<p>
+  BC337-40BUは、平らな面を手前、足を下にして<strong>左からC-B-E</strong>の順に並ぶ。Pin
+  1=Collector、Pin 2=Base、Pin 3=Emitterである。
+</p>
+
+<table>
+  <tr>
+    <th>Pin</th>
+    <th>名称</th>
+    <th>接続先</th>
+  </tr>
+  <tr>
+    <td>Pin 1</td>
+    <td>Collector（C）</td>
+    <td>IR LEDのカソード側</td>
+  </tr>
+  <tr>
+    <td>Pin 2</td>
+    <td>Base（B）</td>
+    <td>2kΩ経由でGP18</td>
+  </tr>
+  <tr>
+    <td>Pin 3</td>
+    <td>Emitter（E）</td>
+    <td>GND</td>
+  </tr>
+</table>
+
+<div class="box box-warn">
+  <strong>⚠️ Pin配置を間違えると</strong><br />
+  C・B・Eを取り違えて接続すると、トランジスタが正しく動作しない、あるいは過大な電流が流れて破損する可能性がある。データシートで平らな面の向きとPin順を必ず確認する。
+</div>
+
+<!-- ============================================================ -->
+<h2>5. なぜ2kΩをBaseに入れるのか</h2>
+
+<p>
+  Base-Emitter間は、ダイオードと同じような性質を持つ。電圧をかけるとほぼ一定の電圧（順電圧、BC337ではおおよそ0.6〜0.7V程度）を維持したまま、抵抗なしでは電流が際限なく増えようとする。GPIOをBaseへ直結すると、GPIOの出力電流の上限を超える電流が流れ、GPIOを壊す恐れがある。
+</p>
+
+<div class="box box-info">
+  <strong>なぜ2kΩなのか</strong><br />
+  Base-Emitter間はダイオードのように電流が流れるため、GPIOを直結すると流れすぎる。2kΩでおおむね1mA程度に抑え、GPIOは「スイッチを操作する小さい電流」だけを担当する。トランジスタは、この小さいBase電流に対して、Collector-Emitter側に十分大きな電流を流せる状態（ON状態）を作り出す。
+</div>
+
+<h3>5-1. Base電流の目安を計算する</h3>
+
+<p>
+  GPIOの出力電圧を3.3V、Base-Emitter間の順電圧を約0.7Vとすると、2kΩにかかる電圧は次のようになる。
+</p>
+
+<div class="card">
+  <div class="card-title"><span class="icon">🔢</span>計算</div>
+  <p class="mono">(3.3 - 0.7) ÷ 2000 ≒ 0.0013A</p>
+  <p>
+    つまり約<strong>1.3mA</strong>。この程度の小さい電流でも、BC337はCollector-Emitter間に十分大きな電流（今回は330Ωで制限された約10mA級）を通す状態を作れる。
+  </p>
+</div>
+
+<!-- ============================================================ -->
+<h2>6. GPIOを流れる電流とIR LEDを流れる電流は別物</h2>
+
+<p>ここまでを整理すると、次の対比になる。</p>
+
+<table>
+  <tr>
+    <th></th>
+    <th>GPIOが担当する電流</th>
+    <th>IR LEDに流れる電流</th>
+  </tr>
+  <tr>
+    <td>経路</td>
+    <td>GPIO → 2kΩ → Base → Emitter → GND</td>
+    <td>VBUS → 330Ω → IR LED → Collector → Emitter → GND</td>
+  </tr>
+  <tr>
+    <td>大きさ</td>
+    <td>約1.3mA</td>
+    <td>約10.3mA</td>
+  </tr>
+  <tr>
+    <td>電源</td>
+    <td>Pico（3.3V）</td>
+    <td>VBUS（5V）</td>
+  </tr>
+</table>
+
+<p>
+  GPIOが流す電流とIR
+  LEDが流す電流は、大きさも電源も経路もすべて別である。トランジスタは、この2つを分離しつつ、片方（Base）の状態でもう片方（Collector-Emitter）を制御する部品として機能する。
+</p>
+
+<!-- ============================================================ -->
+<div class="summary-box">
+  <h3>📋 まとめ</h3>
+  <table>
+    <tr>
+      <th>項目</th>
+      <th>正しい理解</th>
+    </tr>
+    <tr>
+      <td><strong>トランジスタの基本動作</strong></td>
+      <td>Baseの小さい電流で、Collector-Emitter間の大きい電流をON/OFFする</td>
+    </tr>
+    <tr>
+      <td><strong>今回の使い方</strong></td>
+      <td>ローサイドスイッチ。負荷（IR LED）をGND側で開閉する</td>
+    </tr>
+    <tr>
+      <td><strong>Base電流とC-E電流</strong></td>
+      <td>大きさも経路も電源も別の、独立した2つの電流</td>
+    </tr>
+    <tr>
+      <td><strong>2kΩの役割</strong></td>
+      <td>Base-Emitter間に過大な電流が流れるのを防ぎ、GPIOを保護する</td>
+    </tr>
+    <tr>
+      <td><strong>Pin配置</strong></td>
+      <td>平らな面を手前・足を下にして左からC-B-E</td>
+    </tr>
+  </table>
+</div>
