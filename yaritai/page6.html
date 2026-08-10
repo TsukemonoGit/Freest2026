@@ -47,10 +47,14 @@
   li { margin: 0.4rem 0; }
   .ds-quote { background: #f0fdf4; border-left: 4px solid #22c55e; padding: 1rem; margin: 1rem 0; border-radius: 0 8px 8px 0; }
   .ds-quote-title { font-weight: bold; color: #15803d; margin-bottom: 0.5rem; }
+  .pager { display: flex; justify-content: space-between; margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid var(--border); }
+  .pager a { color: var(--accent); text-decoration: none; font-weight: 600; }
+  .pager a:hover { text-decoration: underline; }
+  .pager .disabled { color: #9ca3af; pointer-events: none; }
   footer { text-align: center; margin-top: 3rem; padding: 2rem 0; color: var(--muted); font-size: 0.85rem; border-top: 1px solid var(--border); }
   @media (max-width: 600px) { h1 { font-size: 1.3rem; } .container { padding: 1rem; } }
 </style>
-
+<base target="_blank">
 </head>
 <body>
 <div class="container">
@@ -359,7 +363,94 @@ print([hex(x) for x in i2c.scan()])
   「I²C を使う」＝「SCL と SDA の 2 本にプルアップ抵抗を入れて、マスターがアドレスを指定して話しかける」ということ。ブレッドボードで I²C デバイスを動かないときは、まずプルアップ抵抗とアドレス（<code>i2c.scan()</code>）を確認するのが鉄則です。
 </div>
 
-<div class="pager"><a href="page5.html">← 第5章：温湿度測定へ</a><span></span><a href="../index.html">top →</a></div>
+
+<h2>7. ライブラリの階層構造 — 誰が何を担当するのか</h2>
+
+<p>I²C や 1-Wire を使うとき、「ライブラリを入れる」という言葉を聞きますが、実は<strong>2 種類のライブラリ</strong>が存在します。どちらが何をやっているのかを整理すると、全体像が見えてきます。</p>
+
+<h3>7-1. 2 種類のライブラリ</h3>
+
+<table>
+  <tr><th>種類</th><th>役割</th><th>例</th></tr>
+  <tr>
+    <td><strong>通信プロトコルライブラリ</strong></td>
+    <td>I²C や 1-Wire の「約束事」をプログラムから扱いやすくする。電気信号のタイミングやバイト列の送受信を担当。</td>
+    <td>MicroPython の <code>I2C</code> クラス、<code>onewire</code> モジュール</td>
+  </tr>
+  <tr>
+    <td><strong>機器専用ライブラリ</strong></td>
+    <td>その機器固有の「会話の仕方」を担当。どの命令を送れば温度が返ってくるか、返ってきた生データをどう計算するか。</td>
+    <td>DHT20 用ドライバ、DS18B20 用ドライバ、SSD1306 用ドライバ</td>
+  </tr>
+</table>
+
+<h3>7-2. 階層のイメージ</h3>
+
+<p>DHT20 で温度を取得する場合、階層はこうなります：</p>
+
+<div class="diagram">
+  <svg viewBox="0 0 520 340" xmlns="http://www.w3.org/2000/svg">
+    <rect x="0" y="0" width="520" height="340" fill="#f8fafc" rx="12"/>
+    <text x="260" y="30" text-anchor="middle" font-size="13" font-weight="bold" fill="#374151">ライブラリの階層（DHT20 + I²C の例）</text>
+    <!-- あなた -->
+    <rect x="160" y="45" width="200" height="35" rx="18" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+    <text x="260" y="68" text-anchor="middle" font-size="12" font-weight="bold" fill="#1e3a8a">あなたのプログラム</text>
+    <text x="260" y="82" text-anchor="middle" font-size="10" fill="#4b5563">「温度を取得して」</text>
+    <line x1="260" y1="80" x2="260" y2="95" stroke="#2563eb" stroke-width="1.5"/>
+    <!-- DHT20ライブラリ -->
+    <rect x="140" y="100" width="240" height="45" rx="8" fill="#ecfdf5" stroke="#10b981" stroke-width="2"/>
+    <text x="260" y="120" text-anchor="middle" font-size="11" font-weight="bold" fill="#065f46">DHT20 用ライブラリ（機器専用）</text>
+    <text x="260" y="135" text-anchor="middle" font-size="9" fill="#4b5563">「DHT20にこの命令を送って、返ってきたデータを温度に変換」</text>
+    <line x1="260" y1="145" x2="260" y2="160" stroke="#10b981" stroke-width="1.5"/>
+    <!-- I2Cライブラリ -->
+    <rect x="140" y="165" width="240" height="45" rx="8" fill="#fffbeb" stroke="#f59e0b" stroke-width="2"/>
+    <text x="260" y="185" text-anchor="middle" font-size="11" font-weight="bold" fill="#92400e">I²C ライブラリ（通信プロトコル）</text>
+    <text x="260" y="200" text-anchor="middle" font-size="9" fill="#4b5563">「このデバイスに、このバイト列を、このタイミングで送受信」</text>
+    <line x1="260" y1="210" x2="260" y2="225" stroke="#f59e0b" stroke-width="1.5"/>
+    <!-- Picoハードウェア -->
+    <rect x="140" y="230" width="240" height="45" rx="8" fill="#eff6ff" stroke="#3b82f6" stroke-width="2"/>
+    <text x="260" y="250" text-anchor="middle" font-size="11" font-weight="bold" fill="#1e40af">Pico の I²C ハードウェア</text>
+    <text x="260" y="265" text-anchor="middle" font-size="9" fill="#4b5563">「実際の SDA/SCL の電気信号にする」</text>
+    <line x1="260" y1="275" x2="260" y2="290" stroke="#3b82f6" stroke-width="1.5"/>
+    <!-- DHT20 -->
+    <rect x="180" y="295" width="160" height="35" rx="8" fill="#f3f4f6" stroke="#6b7280" stroke-width="2"/>
+    <text x="260" y="318" text-anchor="middle" font-size="11" font-weight="bold" fill="#374151">DHT20</text>
+  </svg>
+  <p class="diagram-caption">図5：DHT20 で温度を読むときの階層。機器専用ライブラリが「会話の仕方」を、I²C ライブラリが「通信の仕方」を担当する。</p>
+</div>
+
+<h3>7-3. 機器専用ライブラリは必須ではない</h3>
+
+<p>機器専用ライブラリは<strong>便利な省略形</strong>ですが、必ずしも必要ではありません。DHT20 のデータシートを読めば、以下が分かります：</p>
+
+<ul>
+  <li>I²C でアドレス <code>0x38</code> に<strong>測定開始コマンド</strong>（特定のバイト列）を送る</li>
+  <li>測定完了を待つ（データシートに待ち時間が記載されている）</li>
+  <li>6 バイトのデータを読み出す</li>
+  <li>生データを式に代入して温度・湿度に変換する</li>
+</ul>
+
+<p>これを自分でプログラムに書けば、機器専用ライブラリなしで動かせます：</p>
+
+<pre><code>自分のプログラム
+    ↓
+I²C ライブラリ（MicroPython 標準の machine.I2C）
+    ↓
+DHT20
+</code></pre>
+
+<div class="box box-info">
+  <strong>まとめ</strong><br>
+  <ul>
+    <li><strong>I²C / 1-Wire</strong> → 通信プロトコル（通信の約束事そのもの）</li>
+    <li><strong>I²C ライブラリ / 1-Wire ライブラリ</strong> → その約束をプログラムから簡単に使うためのソフトウェア</li>
+    <li><strong>DHT20 用ライブラリ</strong> → DHT20 固有の命令やデータ形式まで面倒を見てくれるソフトウェア（省略形）</li>
+  </ul>
+  機器用ライブラリがなくても、データシートを読んで「この命令を送るとこのデータが返ってくる」を自分で実装すれば、通信プロトコルライブラリだけで十分動かせます。
+</div>
+
+<div class="pager"><a href="page5.html">← 第5章へ</a><span></span><a href="../index.html">TOP →</a></div>
+
 
 <footer>
   <p>やりたいことから始める 赤外線エアコンIoT — 用語解説</p>
