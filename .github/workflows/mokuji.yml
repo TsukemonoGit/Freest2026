@@ -31,7 +31,6 @@ jobs:
 
           html_files = []
           for root, dirs, files in os.walk("."):
-              # .git・.github は除外
               dirs[:] = [d for d in dirs if d not in (".git", ".github")]
               for f in files:
                   if f.lower().endswith(".html"):
@@ -51,14 +50,39 @@ jobs:
                   pass
               return os.path.basename(path)
 
-          lines = []
-          for path in html_files:
-              title = get_title(path)
-              url_path = path.replace(os.sep, "/")
-              url = f"{BASE_URL}/{url_path}"
-              lines.append(f"- [{title}]({url})")
+          # ディレクトリ階層をツリー構造(dict)に変換
+          # 例: {"pages": {"apps": {}, "_files": ["demo2.html"]}, "_files": ["demo1.html"]}
+          tree = {"_files": []}
 
-          toc = "\n".join(lines) if lines else "（HTMLファイルなし）"
+          for path in html_files:
+              parts = path.split(os.sep)
+              node = tree
+              for part in parts[:-1]:
+                  node = node.setdefault(part, {"_files": []})
+              node.setdefault("_files", [])
+              node["_files"].append(path)
+
+          def render(node, depth=0):
+              lines = []
+              indent = "  " * depth
+
+              # ファイルを先に列挙
+              for path in sorted(node.get("_files", [])):
+                  title = get_title(path)
+                  url_path = path.replace(os.sep, "/")
+                  url = f"{BASE_URL}/{url_path}"
+                  lines.append(f"{indent}- [{title}]({url})")
+
+              # サブディレクトリを列挙
+              subdirs = sorted(k for k in node.keys() if k != "_files")
+              for d in subdirs:
+                  lines.append(f"{indent}- **{d}/**")
+                  lines.extend(render(node[d], depth + 1))
+
+              return lines
+
+          toc_lines = render(tree)
+          toc = "\n".join(toc_lines) if toc_lines else "（HTMLファイルなし）"
 
           with open("README.md", encoding="utf-8") as fp:
               readme = fp.read()
@@ -67,7 +91,6 @@ jobs:
           end_marker = "<!-- TOC:END -->"
 
           if start_marker not in readme or end_marker not in readme:
-              # マーカーが無い場合は末尾に追加
               readme = readme.rstrip() + f"\n\n## 目次\n{start_marker}\n{toc}\n{end_marker}\n"
           else:
               pattern = re.compile(
