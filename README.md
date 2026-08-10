@@ -8,6 +8,7 @@
 - [第一部 自由研究資料 Pico 2 WHでつくる赤外線エアコンIoT](https://TsukemonoGit.github.io/Freest2026/index.html)
 - [エアコンIoT自由研究 座学編](https://TsukemonoGit.github.io/Freest2026/zagaku.html)
 - **yaritai/**
+  - [コラム：データシートの読み方](https://TsukemonoGit.github.io/Freest2026/yaritai/datasheet.html)
   - [やりたいことから始める 赤外線エアコンIoT (1/5)](https://TsukemonoGit.github.io/Freest2026/yaritai/page1.html)
   - [やりたいことから始める 赤外線エアコンIoT (2/5)](https://TsukemonoGit.github.io/Freest2026/yaritai/page2.html)
   - [やりたいことから始める 赤外線エアコンIoT (3/5)](https://TsukemonoGit.github.io/Freest2026/yaritai/page3.html)
