@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>やりたいことから始める 赤外線エアコンIoT (3/5)</title>
+<style>
+  :root {
+    --bg: #fafafa; --text: #1a1a1a; --muted: #555;
+    --accent: #2563eb; --accent-light: #dbeafe; --border: #e5e7eb;
+    --code-bg: #f3f4f6; --warn: #f59e0b; --warn-bg: #fffbeb;
+    --ok: #10b981; --ok-bg: #ecfdf5; --danger: #ef4444; --danger-bg: #fee2e2;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: var(--bg); color: var(--text); line-height: 1.7; margin: 0; padding: 0;
+  }
+  .container { max-width: 880px; margin: 0 auto; padding: 2rem 1.5rem; }
+  header { text-align: center; padding: 2rem 0 1.5rem; border-bottom: 2px solid var(--border); margin-bottom: 2rem; }
+  h1 { font-size: 1.7rem; margin: 0 0 0.5rem; letter-spacing: -0.02em; }
+  .subtitle { color: var(--muted); font-size: 1rem; }
+  h2 { font-size: 1.3rem; margin-top: 2.5rem; margin-bottom: 1rem; padding-bottom: 0.3rem; border-bottom: 2px solid var(--accent); display: inline-block; }
+  h3 { font-size: 1.1rem; margin-top: 2rem; color: var(--accent); }
+  h4 { font-size: 1rem; margin-top: 1.5rem; color: #374151; }
+  p { margin: 1rem 0; }
+  .lead { font-size: 1.1rem; color: var(--muted); background: var(--accent-light); padding: 1.2rem; border-radius: 8px; border-left: 4px solid var(--accent); }
+  .diagram { background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; margin: 1.5rem 0; overflow-x: auto; }
+  .diagram svg { display: block; margin: 0 auto; max-width: 100%; height: auto; }
+  .diagram-caption { text-align: center; font-size: 0.85rem; color: var(--muted); margin-top: 0.75rem; }
+  table { width: 100%; border-collapse: collapse; margin: 1.5rem 0; font-size: 0.95rem; }
+  th, td { border: 1px solid var(--border); padding: 0.6rem 0.8rem; text-align: left; }
+  th { background: var(--accent-light); font-weight: 600; }
+  tr:nth-child(even) { background: #f9fafb; }
+  code { background: var(--code-bg); padding: 0.15rem 0.35rem; border-radius: 4px; font-family: "SFMono-Regular", Consolas, monospace; font-size: 0.9em; }
+  pre { background: var(--code-bg); padding: 1rem; border-radius: 8px; overflow-x: auto; font-size: 0.9rem; }
+  .box { background: #fff; border: 1px solid var(--border); border-radius: 8px; padding: 1.2rem; margin: 1rem 0; }
+  .box-warn { background: var(--warn-bg); border-color: #fcd34d; }
+  .box-ok { background: var(--ok-bg); border-color: #6ee7b7; }
+  .box-danger { background: var(--danger-bg); border-color: #fca5a5; }
+  .box-info { background: #eff6ff; border-color: #93c5fd; }
+  .step { display: flex; gap: 1rem; align-items: flex-start; margin: 1.5rem 0; }
+  .step-num { flex-shrink: 0; width: 2.2rem; height: 2.2rem; background: var(--accent); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1rem; }
+  .step-body { flex: 1; }
+  .step-body h4 { margin: 0 0 0.4rem; font-size: 1.05rem; }
+  ul, ol { padding-left: 1.5rem; }
+  li { margin: 0.4rem 0; }
+  .highlight { background: linear-gradient(transparent 60%, #fde047 60%); padding: 0 0.1rem; }
+  .ds-quote { background: #f0fdf4; border-left: 4px solid #22c55e; padding: 1rem; margin: 1rem 0; border-radius: 0 8px 8px 0; }
+  .ds-quote-title { font-weight: bold; color: #15803d; margin-bottom: 0.5rem; }
+  .pager { display: flex; justify-content: space-between; margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid var(--border); }
+  .pager a { color: var(--accent); text-decoration: none; font-weight: 600; }
+  .pager a:hover { text-decoration: underline; }
+  .pager .disabled { color: #9ca3af; pointer-events: none; }
+  footer { text-align: center; margin-top: 3rem; padding: 2rem 0; color: var(--muted); font-size: 0.85rem; border-top: 1px solid var(--border); }
+  @media (max-width: 600px) { h1 { font-size: 1.3rem; } .container { padding: 1rem; } }
+</style>
+<base target="_blank">
+</head>
+<body>
+<div class="container">
+<header>
+  <h1>やりたいことから始める 赤外線エアコンIoT (3/5)</h1>
+  <p class="subtitle">第3章：赤外線送信の仕組み — IR LED とトランジスタの選定と抵抗計算</p>
+</header>
+
+<h2>1. 送信に必要なもの</h2>
+
+<p>受信した信号を再現するには、同じように<strong>赤外線 LED を 38kHz で点滅</strong>させる必要があります。ここで考えるべきは：</p>
+
+<ol>
+  <li><strong>赤外線 LED</strong>：940nm 帯のものが一般的。型番が分かっていれば極性や定格が確定できる。</li>
+  <li><strong>電流の ON/OFF スイッチ</strong>：Pico の GPIO から直接大電流を流す設計にはしない。GPIO は「指令」を出すだけに留め、LED 電流は別の経路（電源）から流す。</li>
+  <li><strong>電流制限</strong>：LED に抵抗なしで電源をつなぐと壊れる可能性がある。</li>
+</ol>
+
+<h2>2. なぜトランジスタが必要か</h2>
+
+<p>Pico の GPIO は最大でも数 mA 程度しか出力できません。しかし IR LED はある程度の電流（今回は初期 10mA 級から試す）を流した方が遠くまで届きます。このギャップを埋めるのが<strong>トランジスタ</strong>です。NPN トランジスタを「電子スイッチ」として使い、GPIO が HIGH の時だけ LED に電流を流します。</p>
+
+<h2>3. データシートを確認するとどうなっているか</h2>
+
+<h3>3-1. IR LED（OSI5LA5A33A-B）</h3>
+
+<div class="ds-quote">
+  <div class="ds-quote-title">OptoSupply OSI5LA5A33A-B（秋月電子商品ページ）確認結果</div>
+  <ul>
+    <li><strong>波長：</strong>940nm（赤外線リモコン用標準帯域）</li>
+    <li><strong>順電圧（Vf）：</strong>約 1.6V（典型値）</li>
+    <li><strong>DC 順電流最大定格：</strong>100mA</li>
+    <li><strong>パルス順電流最大定格：</strong>1,000mA（条件：パルス幅 10ms 以下、デューティ比 1/10 以下）</li>
+    <li><strong>放射強度：</strong>100mW/sr</li>
+    <li><strong>半減角：</strong>30°</li>
+    <li><strong>Pin 配置：</strong>Pin 1 = Anode（アノード）、Pin 2 = Cathode（カソード）</li>
+  </ul>
+</div>
+
+<p>データシートを確認すると、極性と定格が確定しました。ただし「DC 最大 100mA」は絶対最大定格であり、連続で 100mA 流してよいという意味ではありません。パルス駆動の条件付きで 1,000mA まで許容されますが、今回は安全側から始めます。</p>
+
+<h3>3-2. NPN トランジスタ（BC337-40BU）</h3>
+
+<div class="ds-quote">
+  <div class="ds-quote-title">ON Semiconductor BC337/338 Datasheet（秋月 105998）確認結果</div>
+  <ul>
+    <li><strong>型式：</strong>NPN トランジスタ</li>
+    <li><strong>コレクタ・エミッタ間電圧（VCEO）：</strong>45V</li>
+    <li><strong>最大コレクタ電流（IC）：</strong>800mA</li>
+    <li><strong>パッケージ：</strong>TO-92</li>
+    <li><strong>直流電流増幅率（hFE）：</strong>250〜630（BC337-40 グレード）</li>
+    <li><strong>Pin 配置（平らな面を手前、足を下に）：</strong>左から Pin 1=Collector、Pin 2=Base、Pin 3=Emitter</li>
+  </ul>
+</div>
+
+<p>データシートを確認すると、800mA の余裕があり、今回の約 10mA 級の IR LED 駆動には圧倒的に十分であることが分かります。また、足順が明確に定義されているため、ブレッドボード上での向きを間違えにくいです。</p>
+
+<div class="box box-ok">
+  <strong>選定：OSI5LA5A33A-B（940nm IR LED）+ BC337-40BU（NPN トランジスタ）</strong><br>
+  理由：LED は型番確定で極性（1=Anode, 2=Cathode）と定格が分かる。トランジスタは GPIO 電流不足を補い、800mA 余裕あり。両方ともメーカー資料で足順が確定している。
+</div>
+
+<h2>4. 抵抗値を計算する</h2>
+
+<p>トランジスタの BASE（制御端子）と IR LED（出力端子）の両方に抵抗を入れます。値は「どれだけの電流を流したいか」から導きます。</p>
+
+<h3>4-1. BASE 抵抗（2kΩ）</h3>
+
+<p>BASE-EMITTER 間はダイオードに近い性質を持ち、約 0.7〜1.0V の電圧降下があります。GPIO から流れる電流を 1mA 程度に抑えたいと考えると：</p>
+
+<pre><code>Ib ≒ (3.3V - 0.7V) / 2000Ω ≒ 1.3mA</code></pre>
+
+<p>手元に 2kΩ の抵抗があったため、これを使用します。BC337-40BU の hFE は 250 以上なので、1.3mA のベース電流であればコレクタ電流は 300mA 以上の駆動能力があり、今回の用途には十分すぎます。</p>
+
+<h3>4-2. LED 電流制限抵抗（330Ω）</h3>
+
+<p>IR LED の順電圧を 1.6V、USB 給電時の VBUS を約 5V とすると、トランジスタの電圧降下を無視した上限寄りの概算は：</p>
+
+<pre><code>Iled ≒ (5V - 1.6V) / 330Ω ≒ 10.3mA</code></pre>
+
+<p>実際にはトランジスタの COLLECTOR-EMITTER 間にも少し電圧がかかるため、LED 電流はこれよりわずかに小さくなります。最初の動作確認では安全側の約 10mA 級から始めます。</p>
+
+<table>
+  <tr><th>IR LED 直列抵抗</th><th>上限寄りの概算電流※</th><th>今回の扱い</th></tr>
+  <tr><td>330Ω</td><td>約 10.3mA</td><td><strong>最初に使用</strong>。安全側で送信確認する。</td></tr>
+  <tr><td>220Ω</td><td>約 15.5mA</td><td>手元にあれば次の候補。330Ω で距離不足のときに検討する。</td></tr>
+  <tr><td>100Ω</td><td>約 34mA</td><td>最初から使わない。LED 定格だけでなくパルス幅・デューティ比・トランジスタの駆動条件を確認してから検討する。</td></tr>
+</table>
+
+<p>※ VBUS=5V、LED 順電圧=1.6V、トランジスタの電圧降下を無視して計算した値。実際の電流は少し小さくなる。</p>
+
+<div class="box box-warn">
+  <strong>最初は 330Ω で始める</strong><br>
+  100Ω にすると概算 34mA まで増えます。LED の連続／パルス定格、デューティ比、トランジスタの駆動条件を確認してから抵抗値を下げる。最初は安全側の 330Ω で動作確認。
+</div>
+
+<h2>5. 送信回路の全体図</h2>
+
+<div class="diagram">
+  <svg viewBox="0 0 680 300" xmlns="http://www.w3.org/2000/svg">
+    <rect x="0" y="0" width="680" height="300" fill="#f8fafc" rx="12"/>
+    <rect x="30" y="110" width="100" height="80" rx="8" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+    <text x="80" y="140" text-anchor="middle" font-size="12" font-weight="bold" fill="#1e3a8a">Pico</text>
+    <text x="80" y="158" text-anchor="middle" font-size="10" fill="#1e3a8a">GP18</text>
+    <text x="80" y="172" text-anchor="middle" font-size="10" fill="#1e3a8a">(3.3V信号)</text>
+    <line x1="130" y1="150" x2="170" y2="150" stroke="#374151" stroke-width="2"/>
+    <rect x="170" y="140" width="50" height="20" fill="#fde68a" stroke="#d97706" stroke-width="1.5" rx="2"/>
+    <text x="195" y="135" text-anchor="middle" font-size="11" fill="#92400e">2kΩ</text>
+    <text x="195" y="128" text-anchor="middle" font-size="9" fill="#6b7280">ベース電流制限</text>
+    <line x1="220" y1="150" x2="260" y2="150" stroke="#374151" stroke-width="2"/>
+    <circle cx="290" cy="150" r="35" fill="#fff" stroke="#374151" stroke-width="2"/>
+    <text x="290" y="120" text-anchor="middle" font-size="11" font-weight="bold" fill="#374151">BC337-40BU</text>
+    <text x="290" y="155" text-anchor="middle" font-size="10" fill="#374151">NPN</text>
+    <text x="260" y="165" text-anchor="middle" font-size="9" fill="#6b7280">B</text>
+    <text x="290" y="195" text-anchor="middle" font-size="9" fill="#6b7280">E→GND</text>
+    <line x1="290" y1="185" x2="290" y2="230" stroke="#374151" stroke-width="2"/>
+    <line x1="290" y1="230" x2="290" y2="260" stroke="#374151" stroke-width="2"/>
+    <text x="310" y="265" font-size="10" fill="#374151">GND</text>
+    <line x1="320" y1="150" x2="360" y2="150" stroke="#374151" stroke-width="2"/>
+    <text x="340" y="140" text-anchor="middle" font-size="9" fill="#6b7280">C</text>
+    <line x1="360" y1="150" x2="400" y2="150" stroke="#ef4444" stroke-width="2"/>
+    <polygon points="400,140 400,160 420,150" fill="#ef4444" opacity="0.3"/>
+    <line x1="400" y1="140" x2="400" y2="160" stroke="#ef4444" stroke-width="2"/>
+    <line x1="405" y1="135" x2="405" y2="165" stroke="#ef4444" stroke-width="2"/>
+    <line x1="420" y1="150" x2="460" y2="150" stroke="#ef4444" stroke-width="2"/>
+    <text x="410" y="130" text-anchor="middle" font-size="10" fill="#991b1b">IR LED</text>
+    <text x="410" y="180" text-anchor="middle" font-size="9" fill="#6b7280">940nm</text>
+    <text x="410" y="192" text-anchor="middle" font-size="9" fill="#6b7280">1=A 2=K</text>
+    <rect x="460" y="140" width="50" height="20" fill="#fde68a" stroke="#d97706" stroke-width="1.5" rx="2"/>
+    <text x="485" y="135" text-anchor="middle" font-size="11" fill="#92400e">330Ω</text>
+    <text x="485" y="128" text-anchor="middle" font-size="9" fill="#6b7280">LED電流制限</text>
+    <line x1="510" y1="150" x2="550" y2="150" stroke="#ef4444" stroke-width="2"/>
+    <text x="570" y="140" font-size="12" font-weight="bold" fill="#374151">VBUS</text>
+    <text x="570" y="158" font-size="10" fill="#374151">≒5V (USB)</text>
+    <path d="M 560 165 Q 480 210 360 170" fill="none" stroke="#10b981" stroke-width="1.5" stroke-dasharray="6,3" opacity="0.6"/>
+    <text x="480" y="200" font-size="10" fill="#065f46">電流の主経路</text>
+  </svg>
+  <p class="diagram-caption">図2：IR LED 送信回路。GPIO は「スイッチの指令」だけを出し、LED 電流は VBUS 側から流れる。</p>
+</div>
+
+<h2>6. 38kHz 搬送波の生成実験</h2>
+
+<p>赤外線受信モジュールは単に IR LED を点灯しただけでは反応しにくい。赤外線リモコンでは数十 kHz の搬送波で高速点滅させる必要があります。Pico では PWM で 38kHz の搬送波を作れます。</p>
+
+<pre><code>from machine import Pin, PWM
+from time import sleep_ms
+
+pwm = PWM(Pin(18))
+pwm.freq(38000)
+pwm.duty_u16(32768)   # 約50% duty
+sleep_ms(1000)
+pwm.duty_u16(0)
+pwm.deinit()
+</code></pre>
+
+<p>この段階ではエアコンを動かす必要はありません。PL-IRM1838B で自分の送信を自分で受信して確認するか、スマートフォンのカメラで IR LED が点滅しているかを見る方法もあります（機種によって赤外線カットが強く見えないことがあるため、PL-IRM1838B での確認がより確実です）。</p>
+
+<div class="pager"><a href="yaritai/page2.html">← 第2章：赤外線受信へ</a><span></span><a href="yaritai/page4.html">第4章：温湿度測定と手動入力へ →</a></div>
+<footer>
+  <p>やりたいことから始める 赤外線エアコンIoT — 思考の流れ版</p>
+  <p style="font-size:0.8rem; margin-top:0.5rem;">対象機種：日立 白くまくん RAS-AJ3626S / リモコン RAR-8P2</p>
+</footer>
+</div>
+</body>
+</html>

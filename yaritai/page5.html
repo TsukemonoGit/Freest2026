@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>やりたいことから始める 赤外線エアコンIoT (5/5)</title>
+<style>
+  :root {
+    --bg: #fafafa; --text: #1a1a1a; --muted: #555;
+    --accent: #2563eb; --accent-light: #dbeafe; --border: #e5e7eb;
+    --code-bg: #f3f4f6; --warn: #f59e0b; --warn-bg: #fffbeb;
+    --ok: #10b981; --ok-bg: #ecfdf5; --danger: #ef4444; --danger-bg: #fee2e2;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: var(--bg); color: var(--text); line-height: 1.7; margin: 0; padding: 0;
+  }
+  .container { max-width: 880px; margin: 0 auto; padding: 2rem 1.5rem; }
+  header { text-align: center; padding: 2rem 0 1.5rem; border-bottom: 2px solid var(--border); margin-bottom: 2rem; }
+  h1 { font-size: 1.7rem; margin: 0 0 0.5rem; letter-spacing: -0.02em; }
+  .subtitle { color: var(--muted); font-size: 1rem; }
+  h2 { font-size: 1.3rem; margin-top: 2.5rem; margin-bottom: 1rem; padding-bottom: 0.3rem; border-bottom: 2px solid var(--accent); display: inline-block; }
+  h3 { font-size: 1.1rem; margin-top: 2rem; color: var(--accent); }
+  h4 { font-size: 1rem; margin-top: 1.5rem; color: #374151; }
+  p { margin: 1rem 0; }
+  .lead { font-size: 1.1rem; color: var(--muted); background: var(--accent-light); padding: 1.2rem; border-radius: 8px; border-left: 4px solid var(--accent); }
+  .diagram { background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; margin: 1.5rem 0; overflow-x: auto; }
+  .diagram svg { display: block; margin: 0 auto; max-width: 100%; height: auto; }
+  .diagram-caption { text-align: center; font-size: 0.85rem; color: var(--muted); margin-top: 0.75rem; }
+  table { width: 100%; border-collapse: collapse; margin: 1.5rem 0; font-size: 0.95rem; }
+  th, td { border: 1px solid var(--border); padding: 0.6rem 0.8rem; text-align: left; }
+  th { background: var(--accent-light); font-weight: 600; }
+  tr:nth-child(even) { background: #f9fafb; }
+  code { background: var(--code-bg); padding: 0.15rem 0.35rem; border-radius: 4px; font-family: "SFMono-Regular", Consolas, monospace; font-size: 0.9em; }
+  pre { background: var(--code-bg); padding: 1rem; border-radius: 8px; overflow-x: auto; font-size: 0.9rem; }
+  .box { background: #fff; border: 1px solid var(--border); border-radius: 8px; padding: 1.2rem; margin: 1rem 0; }
+  .box-warn { background: var(--warn-bg); border-color: #fcd34d; }
+  .box-ok { background: var(--ok-bg); border-color: #6ee7b7; }
+  .box-danger { background: var(--danger-bg); border-color: #fca5a5; }
+  .box-info { background: #eff6ff; border-color: #93c5fd; }
+  .step { display: flex; gap: 1rem; align-items: flex-start; margin: 1.5rem 0; }
+  .step-num { flex-shrink: 0; width: 2.2rem; height: 2.2rem; background: var(--accent); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1rem; }
+  .step-body { flex: 1; }
+  .step-body h4 { margin: 0 0 0.4rem; font-size: 1.05rem; }
+  ul, ol { padding-left: 1.5rem; }
+  li { margin: 0.4rem 0; }
+  .highlight { background: linear-gradient(transparent 60%, #fde047 60%); padding: 0 0.1rem; }
+  .ds-quote { background: #f0fdf4; border-left: 4px solid #22c55e; padding: 1rem; margin: 1rem 0; border-radius: 0 8px 8px 0; }
+  .ds-quote-title { font-weight: bold; color: #15803d; margin-bottom: 0.5rem; }
+  .pager { display: flex; justify-content: space-between; margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid var(--border); }
+  .pager a { color: var(--accent); text-decoration: none; font-weight: 600; }
+  .pager a:hover { text-decoration: underline; }
+  .pager .disabled { color: #9ca3af; pointer-events: none; }
+  footer { text-align: center; margin-top: 3rem; padding: 2rem 0; color: var(--muted); font-size: 0.85rem; border-top: 1px solid var(--border); }
+  @media (max-width: 600px) { h1 { font-size: 1.3rem; } .container { padding: 1rem; } }
+</style>
+<base target="_blank">
+</head>
+<body>
+<div class="container">
+<header>
+  <h1>やりたいことから始める 赤外線エアコンIoT (5/5)</h1>
+  <p class="subtitle">第5章：全体像・配置戦略・実験ステップ・参考資料</p>
+</header>
+
+<h2>1. 部品選定の全体像</h2>
+
+<p>ここまでの思考の流れをまとめると、以下の表のようになります。「やりたいこと」→「必要な機能」→「選定した部品」→「なぜその部品か」が一直線につながっています。</p>
+
+<table>
+  <tr><th>やりたいこと</th><th>必要な機能</th><th>選定部品</th><th>選定理由</th></tr>
+  <tr><td>エアコンを自動操作</td><td>頭脳＋通信</td><td>Pico 2 WH</td><td>Wi-Fi 内蔵、3.3V、MicroPython、PIO、安価</td></tr>
+  <tr><td>リモコンの信号を覚える</td><td>赤外線受信</td><td>PL-IRM1838B</td><td>3.3V 動作、38kHz 復調、出力レベル互換、メーカー資料確定</td></tr>
+  <tr><td>覚えた信号を再現</td><td>赤外線送信</td><td>OSI5LA5A33A-B + BC337-40BU</td><td>LED は型番確定で極性・定格が分かる。トランジスタは GPIO 電流不足を補い、800mA 余裕あり</td></tr>
+  <tr><td>室温で判断したい</td><td>温湿度測定</td><td>DHT20</td><td>3.3V、I²C、温湿度両方、外付け部品要件が明確</td></tr>
+  <tr><td>手動で動作確認</td><td>入力スイッチ</td><td>タクトスイッチ</td><td>Pico 内部プルアップで外付け抵抗不要</td></tr>
+  <tr><td>回路を組む</td><td>配線基盤</td><td>ブレッドボード＋ジャンパ線</td><td>ELEGOO キットのものを流用。はんだ付け不要で試行錯誤できる</td></tr>
+</table>
+
+<h2>2. ブレッドボード上に「配置戦略」を立てる</h2>
+
+<p>部品が揃ったら、ブレッドボード上にどう配置するかを考えます。配線を追いやすくするために、Pico を中央の溝をまたぐように挿し、左右に機能を分けます。</p>
+
+<div class="diagram">
+  <svg viewBox="0 0 720 340" xmlns="http://www.w3.org/2000/svg">
+    <rect x="0" y="0" width="720" height="340" fill="#f8fafc" rx="12"/>
+    <rect x="40" y="40" width="640" height="260" rx="8" fill="#fff" stroke="#d1d5db" stroke-width="2"/>
+    <line x1="40" y1="170" x2="680" y2="170" stroke="#e5e7eb" stroke-width="2" stroke-dasharray="8,4"/>
+    <text x="360" y="185" text-anchor="middle" font-size="10" fill="#9ca3af">溝（中央分離）</text>
+    <rect x="50" y="50" width="620" height="25" rx="4" fill="#dbeafe" stroke="#2563eb" stroke-width="1" opacity="0.5"/>
+    <text x="360" y="67" text-anchor="middle" font-size="11" fill="#1e3a8a">＋ レール（3.3V / VBUS）</text>
+    <rect x="50" y="265" width="620" height="25" rx="4" fill="#f3f4f6" stroke="#374151" stroke-width="1" opacity="0.5"/>
+    <text x="360" y="282" text-anchor="middle" font-size="11" fill="#374151">− レール（GND）</text>
+    <rect x="320" y="110" width="80" height="120" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+    <text x="360" y="145" text-anchor="middle" font-size="12" font-weight="bold" fill="#1e3a8a">Pico 2 WH</text>
+    <text x="360" y="165" text-anchor="middle" font-size="9" fill="#1e3a8a">USBを上側</text>
+    <text x="360" y="185" text-anchor="middle" font-size="9" fill="#1e3a8a">溝をまたぐ</text>
+    <rect x="80" y="100" width="100" height="50" rx="6" fill="#ecfdf5" stroke="#10b981" stroke-width="1.5"/>
+    <text x="130" y="120" text-anchor="middle" font-size="10" font-weight="bold" fill="#065f46">DHT20</text>
+    <text x="130" y="135" text-anchor="middle" font-size="9" fill="#4b5563">左側に配置</text>
+    <text x="130" y="148" text-anchor="middle" font-size="9" fill="#6b7280">SDA/SCL/3.3V/GND</text>
+    <rect x="80" y="180" width="100" height="50" rx="6" fill="#ecfdf5" stroke="#10b981" stroke-width="1.5"/>
+    <text x="130" y="200" text-anchor="middle" font-size="10" font-weight="bold" fill="#065f46">PL-IRM1838B</text>
+    <text x="130" y="215" text-anchor="middle" font-size="9" fill="#4b5563">左側に配置</text>
+    <text x="130" y="228" text-anchor="middle" font-size="9" fill="#6b7280">OUT/GND/VCC</text>
+    <rect x="540" y="100" width="100" height="60" rx="6" fill="#fee2e2" stroke="#ef4444" stroke-width="1.5"/>
+    <text x="590" y="120" text-anchor="middle" font-size="10" font-weight="bold" fill="#991b1b">IR送信回路</text>
+    <text x="590" y="135" text-anchor="middle" font-size="9" fill="#4b5563">LED + トランジスタ</text>
+    <text x="590" y="148" text-anchor="middle" font-size="9" fill="#4b5563">右側に配置</text>
+    <rect x="540" y="190" width="100" height="40" rx="6" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.5"/>
+    <text x="590" y="208" text-anchor="middle" font-size="10" font-weight="bold" fill="#1e40af">タクトスイッチ</text>
+    <text x="590" y="222" text-anchor="middle" font-size="9" fill="#4b5563">右下に配置</text>
+    <line x1="180" y1="125" x2="320" y2="140" stroke="#10b981" stroke-width="1" stroke-dasharray="4,2" opacity="0.4"/>
+    <line x1="180" y1="205" x2="320" y2="160" stroke="#10b981" stroke-width="1" stroke-dasharray="4,2" opacity="0.4"/>
+    <line x1="400" y1="140" x2="540" y2="130" stroke="#ef4444" stroke-width="1" stroke-dasharray="4,2" opacity="0.4"/>
+    <line x1="400" y1="180" x2="540" y2="210" stroke="#3b82f6" stroke-width="1" stroke-dasharray="4,2" opacity="0.4"/>
+    <text x="360" y="310" text-anchor="middle" font-size="11" fill="#6b7280">配線は機能ごとに分けて、クロスさせないように配置すると追いやすい</text>
+  </svg>
+  <p class="diagram-caption">図4：ブレッドボード配置戦略。Pico を中央に、受信系を左、送信系を右に分ける。</p>
+</div>
+
+<h2>3. ピン配置のまとめ</h2>
+
+<table>
+  <tr><th>用途</th><th>GPIO</th><th>物理ピン</th><th>接続先</th></tr>
+  <tr><td>DHT20 SDA</td><td>GP4</td><td>6</td><td>DHT20 Pin 2 SDA（5kΩ プルアップ経由）</td></tr>
+  <tr><td>DHT20 SCL</td><td>GP5</td><td>7</td><td>DHT20 Pin 4 SCL（5kΩ プルアップ経由）</td></tr>
+  <tr><td>タクトスイッチ</td><td>GP15</td><td>20</td><td>スイッチ片側 → GND（内部プルアップ）</td></tr>
+  <tr><td>IR 受信</td><td>GP16</td><td>21</td><td>PL-IRM1838B Pin 1 OUT</td></tr>
+  <tr><td>IR 送信</td><td>GP18</td><td>24</td><td>2kΩ → BC337-40BU BASE（Pin 2）</td></tr>
+  <tr><td>3.3V 電源</td><td>—</td><td>36</td><td>DHT20、PL-IRM1838B（100Ω フィルタ経由）</td></tr>
+  <tr><td>GND</td><td>—</td><td>3/8/13/18/23/28/38 など</td><td>全回路共通</td></tr>
+  <tr><td>USB 給電時の 5V</td><td>VBUS</td><td>40</td><td>IR LED 送信回路の電源（330Ω 経由）</td></tr>
+</table>
+
+<h2>4. 一つずつ組み上げて確認する</h2>
+
+<p>回路を一気に全部繋いでから動作確認するのではなく、<strong>一機能ずつ独立して動作確認</strong>します。これが「やりたいこと」から組み上げるアプローチの最も重要な実践です。</p>
+
+<div class="step">
+  <div class="step-num">1</div>
+  <div class="step-body">
+    <h4>Pico に MicroPython を入れて REPL を開く</h4>
+    <p>まず「頭脳」が動くことを確認。USB 接続で <code>&gt;&gt;&gt;</code> が表示されれば OK。</p>
+  </div>
+</div>
+
+<div class="step">
+  <div class="step-num">2</div>
+  <div class="step-body">
+    <h4>PL-IRM1838B だけ接続して純正リモコンの信号を受信</h4>
+    <p>エアコンの純正リモコンをエアコンへ向けたまま、横から受信モジュールで拾う。GP16 の値が変化すれば受信成功。ここで信号の時間列を観察し、エアコンのプロトコルを「推測」ではなく「実測」で把握する。</p>
+  </div>
+</div>
+
+<div class="step">
+  <div class="step-num">3</div>
+  <div class="step-body">
+    <h4>IR LED 送信回路だけで 38kHz の搬送波を生成</h4>
+    <p>PWM で 38kHz を出し、PL-IRM1838B で自分の送信を自分で受信して確認。LED の極性やトランジスタの C/B/E が正しいことを検証する。</p>
+  </div>
+</div>
+
+<div class="step">
+  <div class="step-num">4</div>
+  <div class="step-body">
+    <h4>学習した信号を再送信してエアコンが動くか確認</h4>
+    <p>実測した MARK/SPACE 時間列をそのまま再送信。エアコンが反応すれば、学習と再送信の閉ループが完成。</p>
+  </div>
+</div>
+
+<div class="step">
+  <div class="step-num">5</div>
+  <div class="step-body">
+    <h4>DHT20 だけ接続して I²C スキャン → 温湿度取得</h4>
+    <p><code>i2c.scan()</code> で <code>0x38</code> が見えれば配線成功。測定コマンドと待ち時間を守って温度・湿度を読む。</p>
+  </div>
+</div>
+
+<div class="step">
+  <div class="step-num">6</div>
+  <div class="step-body">
+    <h4>タクトスイッチだけ接続して押下確認</h4>
+    <p>内部プルアップを有効にして、押すと LOW になることを確認。</p>
+  </div>
+</div>
+
+<div class="step">
+  <div class="step-num">7</div>
+  <div class="step-body">
+    <h4>すべてを統合する</h4>
+    <p>各機能が独立して動いたら、最後に統合。ボタンを押したら温湿度を測定しつつ IR 送信、という流れを組む。一気に全部繋いで動かないより、個別に動作確認してから統合する方が圧倒的に速い。</p>
+  </div>
+</div>
+
+<h2>5. 電源を入れる前の最終チェック</h2>
+
+<div class="box box-warn">
+  <ul>
+    <li>3.3V と GND が直接つながっていないか</li>
+    <li>VBUS の約 5V が Pico の GPIO へ直接入る経路がないか</li>
+    <li>DHT20 の Pin 1〜4 を逆にしていないか</li>
+    <li>DHT20 の SDA/SCL に 5kΩ×2、VDD-GND 間に 0.1µF が入っているか</li>
+    <li>PL-IRM1838B の Pin 1=OUT、2=GND、3=VCC を確認したか</li>
+    <li>PL-IRM1838B の電源側に 100Ω と 47µF の推奨フィルタが入っているか</li>
+    <li>BC337-40BU は平らな面を手前・足を下にして左から C-B-E（Pin 1=Collector / 2=Base / 3=Emitter）になっているか</li>
+    <li>OSI5LA5A33A-B の Pin 1=アノード、Pin 2=カソードを確認したか</li>
+    <li>IR LED に 330Ω、BC337-40BU BASE（Pin 2）に 2kΩ が入っているか</li>
+    <li>すべての GND が共通になっているか</li>
+  </ul>
+</div>
+
+<h2>6. 自由研究として記録する内容</h2>
+
+<table>
+  <tr><th>実験</th><th>変える条件</th><th>記録するもの</th></tr>
+  <tr><td>IR 受信</td><td>電源ON/OFF、温度、モード</td><td>MARK/SPACE の時間列</td></tr>
+  <tr><td>再現性</td><td>同じ操作を 5 回程度</td><td>時間列がどの程度一致するか</td></tr>
+  <tr><td>IR 送信距離</td><td>0.5m、1m、2m、3m</td><td>エアコンが反応した距離</td></tr>
+  <tr><td>IR 送信角度</td><td>LED の向きを変える</td><td>反応できる角度</td></tr>
+  <tr><td>温湿度</td><td>時間経過</td><td>温度・湿度の推移</td></tr>
+  <tr><td>統合動作</td><td>ボタン操作</td><td>押下から IR 送信までの結果</td></tr>
+</table>
+
+<h2>7. 第2部へのつながり</h2>
+
+<p>第1部が完成したら、Pico 2 WH を「エアコンの近くに置く実働機」にします。Pico は DHT20、IR 受信、IR 送信を担当し、Wi-Fi 経由で Raspberry Pi 4B などのサーバーと通信する。4B 側は SSH、Nostr、ログ保存、外部からの命令受付などを担当します。</p>
+
+<p>この構想が最初からあったからこそ、マイコンに「Wi-Fi 内蔵」を選定したのでした。</p>
+
+<div class="diagram">
+  <svg viewBox="0 0 640 200" xmlns="http://www.w3.org/2000/svg">
+    <rect x="0" y="0" width="640" height="200" fill="#f8fafc" rx="12"/>
+    <rect x="40" y="60" width="140" height="80" rx="8" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+    <text x="110" y="90" text-anchor="middle" font-size="12" font-weight="bold" fill="#1e3a8a">Raspberry Pi 4B</text>
+    <text x="110" y="110" text-anchor="middle" font-size="10" fill="#4b5563">サーバー側</text>
+    <text x="110" y="125" text-anchor="middle" font-size="9" fill="#6b7280">SSH / Nostr / ログ</text>
+    <line x1="180" y1="100" x2="260" y2="100" stroke="#2563eb" stroke-width="2" stroke-dasharray="6,3"/>
+    <text x="220" y="90" text-anchor="middle" font-size="10" fill="#2563eb">Wi-Fi</text>
+    <rect x="260" y="60" width="140" height="80" rx="8" fill="#ecfdf5" stroke="#10b981" stroke-width="2"/>
+    <text x="330" y="90" text-anchor="middle" font-size="12" font-weight="bold" fill="#065f46">Pico 2 WH</text>
+    <text x="330" y="110" text-anchor="middle" font-size="10" fill="#4b5563">実働機</text>
+    <text x="330" y="125" text-anchor="middle" font-size="9" fill="#6b7280">DHT20 / IR送受信</text>
+    <line x1="400" y1="100" x2="480" y2="100" stroke="#ef4444" stroke-width="2" stroke-dasharray="4,2"/>
+    <text x="440" y="90" text-anchor="middle" font-size="10" fill="#991b1b">赤外線</text>
+    <rect x="480" y="60" width="120" height="80" rx="8" fill="#fffbeb" stroke="#f59e0b" stroke-width="2"/>
+    <text x="540" y="90" text-anchor="middle" font-size="12" font-weight="bold" fill="#92400e">エアコン</text>
+    <text x="540" y="110" text-anchor="middle" font-size="10" fill="#4b5563">日立 白くまくん</text>
+    <text x="540" y="125" text-anchor="middle" font-size="9" fill="#6b7280">RAS-AJ3626S</text>
+  </svg>
+  <p class="diagram-caption">図5：第2部の構成イメージ。Pico が実働機、4B がサーバー側を担当。</p>
+</div>
+
+<h2>8. 参考資料</h2>
+
+<table>
+  <tr><th>資料名</th><th>確認した内容</th><th>本プロジェクトでの活用</th></tr>
+  <tr>
+    <td>Raspberry Pi Ltd., Raspberry Pi Pico 2 W Datasheet</td>
+    <td>40ピン配置、3V3、VBUS、GPIOが3.3V固定であること</td>
+    <td>マイコン選定の根拠。VBUSをIR LED電源として使用する根拠。</td>
+  </tr>
+  <tr>
+    <td>Para Light Electronics, PL-IRM1838B Data Sheet</td>
+    <td>電源2.7〜5.5V、中心周波数37.9kHz、active-low、Pin 1=Output / 2=Ground / 3=Vcc、推奨電源フィルタ（47〜100Ω + 47µF）</td>
+    <td>受信モジュール選定と配線、電源フィルタの根拠。</td>
+  </tr>
+  <tr>
+    <td>Aosong / ASAIR, DHT20 Data Sheet</td>
+    <td>電源2.2〜5.5V、I²C、アドレス0x38、Pin 1=VDD / 2=SDA / 3=GND / 4=SCL、4.7kΩプルアップ例、0.1µFデカップリング</td>
+    <td>温湿度センサー選定とI²C配線、外付け部品選定の根拠。</td>
+  </tr>
+  <tr>
+    <td>OptoSupply OSI5LA5A33A-B（秋月電子商品ページ）</td>
+    <td>940nm、順電圧1.6V、順電流最大100mA、放射強度100mW/sr、半減角30°、Pin 1=Anode / 2=Cathode</td>
+    <td>IR LED選定と極性確認、電流制限抵抗計算の根拠。</td>
+  </tr>
+  <tr>
+    <td>Fairchild / ON Semiconductor, BC337/338 Datasheet</td>
+    <td>BC337-40BUはNPN、45V、800mA、TO-92。端子はPin 1=Collector / 2=Base / 3=Emitter（平らな面を手前にして左からC-B-E）</td>
+    <td>トランジスタ選定と足順確認、ベース抵抗計算の根拠。</td>
+  </tr>
+  <tr>
+    <td>秋月電子 105998 BC337-40BU</td>
+    <td>ON Semiconductor製BC337-40BU、10個入り</td>
+    <td>入手先確認。型番とメーカーが確定している。</td>
+  </tr>
+  <tr>
+    <td>日立 ルームエアコン AJシリーズ（2026年）</td>
+    <td>対象機種RAS-AJ3626Sと付属リモコンRAR-8P2の確認</td>
+    <td>対象機種の特定。ただし赤外線プロトコルは公開仕様で未確認のため、実測で学習する方針。</td>
+  </tr>
+  <tr>
+    <td>秋月電子 117887 47µF 35V 電解コンデンサ</td>
+    <td>PL-IRM1838Bの47µF電源フィルタ用</td>
+    <td>電源フィルタ部品の入手先。</td>
+  </tr>
+  <tr>
+    <td>秋月電子 110147 0.1µF セラミックコンデンサ</td>
+    <td>DHT20の100nFデカップリング用</td>
+    <td>デカップリング部品の入手先。セラミックなので極性なし。</td>
+  </tr>
+</table>
+
+<h2>9. なぜこの流れで考えるのか</h2>
+
+<p>元の資料が「回路ありき」で「なぜこの部品か」を後付けで説明するのに対し、この記事では<strong>「やりたいこと」が常に先に立ち、それを満たすために部品が「必然」として導かれる</strong>流れを取っています。</p>
+
+<p>このアプローチの利点は：</p>
+
+<ul>
+  <li><strong>部品を変更した理由が自然に説明できる</strong>：DHT11 から DHT20 へ変えたのは「3.3V 対応」という制約から必然導出される。</li>
+  <li><strong>抵抗値の根拠が明確</strong>：2kΩ や 330Ω は「この電流にしたい」という意図から計算され、ただの「部品表」ではなく「設計意図」になる。</li>
+  <li><strong>失敗時の切り分けが容易</strong>：一機能ずつ組むので、「今どこまで動いていて、どこで止まったか」が即座に分かる。</li>
+  <li><strong>将来の拡張が見える</strong>：Wi-Fi を選んだ理由が「サーバー連携」にあるため、第2部への流れが自然。</li>
+  <li><strong>データシートの読み方が身につく</strong>：各章で「データシートを確認するとどうなっているか」を明示することで、部品選定の根拠を自分で導けるようになる。</li>
+</ul>
+
+<div class="pager"><a href="yaritai/page4.html">← 第4章：温湿度測定へ</a><span></span><span class="disabled">次へ →</span></div>
+<footer>
+  <p>やりたいことから始める 赤外線エアコンIoT — 思考の流れ版</p>
+  <p style="font-size:0.8rem; margin-top:0.5rem;">対象機種：日立 白くまくん RAS-AJ3626S / リモコン RAR-8P2</p>
+</footer>
+</div>
+</body>
+</html>

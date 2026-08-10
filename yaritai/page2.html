@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>やりたいことから始める 赤外線エアコンIoT (2/5)</title>
+<style>
+  :root {
+    --bg: #fafafa; --text: #1a1a1a; --muted: #555;
+    --accent: #2563eb; --accent-light: #dbeafe; --border: #e5e7eb;
+    --code-bg: #f3f4f6; --warn: #f59e0b; --warn-bg: #fffbeb;
+    --ok: #10b981; --ok-bg: #ecfdf5; --danger: #ef4444; --danger-bg: #fee2e2;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: var(--bg); color: var(--text); line-height: 1.7; margin: 0; padding: 0;
+  }
+  .container { max-width: 880px; margin: 0 auto; padding: 2rem 1.5rem; }
+  header { text-align: center; padding: 2rem 0 1.5rem; border-bottom: 2px solid var(--border); margin-bottom: 2rem; }
+  h1 { font-size: 1.7rem; margin: 0 0 0.5rem; letter-spacing: -0.02em; }
+  .subtitle { color: var(--muted); font-size: 1rem; }
+  h2 { font-size: 1.3rem; margin-top: 2.5rem; margin-bottom: 1rem; padding-bottom: 0.3rem; border-bottom: 2px solid var(--accent); display: inline-block; }
+  h3 { font-size: 1.1rem; margin-top: 2rem; color: var(--accent); }
+  h4 { font-size: 1rem; margin-top: 1.5rem; color: #374151; }
+  p { margin: 1rem 0; }
+  .lead { font-size: 1.1rem; color: var(--muted); background: var(--accent-light); padding: 1.2rem; border-radius: 8px; border-left: 4px solid var(--accent); }
+  .diagram { background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; margin: 1.5rem 0; overflow-x: auto; }
+  .diagram svg { display: block; margin: 0 auto; max-width: 100%; height: auto; }
+  .diagram-caption { text-align: center; font-size: 0.85rem; color: var(--muted); margin-top: 0.75rem; }
+  table { width: 100%; border-collapse: collapse; margin: 1.5rem 0; font-size: 0.95rem; }
+  th, td { border: 1px solid var(--border); padding: 0.6rem 0.8rem; text-align: left; }
+  th { background: var(--accent-light); font-weight: 600; }
+  tr:nth-child(even) { background: #f9fafb; }
+  code { background: var(--code-bg); padding: 0.15rem 0.35rem; border-radius: 4px; font-family: "SFMono-Regular", Consolas, monospace; font-size: 0.9em; }
+  pre { background: var(--code-bg); padding: 1rem; border-radius: 8px; overflow-x: auto; font-size: 0.9rem; }
+  .box { background: #fff; border: 1px solid var(--border); border-radius: 8px; padding: 1.2rem; margin: 1rem 0; }
+  .box-warn { background: var(--warn-bg); border-color: #fcd34d; }
+  .box-ok { background: var(--ok-bg); border-color: #6ee7b7; }
+  .box-danger { background: var(--danger-bg); border-color: #fca5a5; }
+  .box-info { background: #eff6ff; border-color: #93c5fd; }
+  .step { display: flex; gap: 1rem; align-items: flex-start; margin: 1.5rem 0; }
+  .step-num { flex-shrink: 0; width: 2.2rem; height: 2.2rem; background: var(--accent); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1rem; }
+  .step-body { flex: 1; }
+  .step-body h4 { margin: 0 0 0.4rem; font-size: 1.05rem; }
+  ul, ol { padding-left: 1.5rem; }
+  li { margin: 0.4rem 0; }
+  .highlight { background: linear-gradient(transparent 60%, #fde047 60%); padding: 0 0.1rem; }
+  .ds-quote { background: #f0fdf4; border-left: 4px solid #22c55e; padding: 1rem; margin: 1rem 0; border-radius: 0 8px 8px 0; }
+  .ds-quote-title { font-weight: bold; color: #15803d; margin-bottom: 0.5rem; }
+  .pager { display: flex; justify-content: space-between; margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid var(--border); }
+  .pager a { color: var(--accent); text-decoration: none; font-weight: 600; }
+  .pager a:hover { text-decoration: underline; }
+  .pager .disabled { color: #9ca3af; pointer-events: none; }
+  footer { text-align: center; margin-top: 3rem; padding: 2rem 0; color: var(--muted); font-size: 0.85rem; border-top: 1px solid var(--border); }
+  @media (max-width: 600px) { h1 { font-size: 1.3rem; } .container { padding: 1rem; } }
+</style>
+<base target="_blank">
+</head>
+<body>
+<div class="container">
+<header>
+  <h1>やりたいことから始める 赤外線エアコンIoT (2/5)</h1>
+  <p class="subtitle">第2章：赤外線受信の仕組み — PL-IRM1838B のデータシート確認と電源フィルタ</p>
+</header>
+
+<h2>1. なぜ受信モジュールが必要か</h2>
+
+<p>エアコンの純正リモコン（RAR-8P2）が出す赤外線信号は、人の目には見えない光の点滅です。Pico の GPIO は「光」を直接読めないので、光を電気信号に変換してくれる部品が必要です。</p>
+
+<p>さらに、リモコンの赤外線 LED は <strong>38kHz で高速点滅（変調）</strong>しています。Pico に「38,000 回/秒の光を直接数えてほしい」とお願いするのは大変なので、「38kHz の変調を検出して、光が来ている間は LOW、来ていない間は HIGH として出力してくれる」モジュールを使います。</p>
+
+<h2>2. データシートを確認するとどうなっているか</h2>
+
+<div class="ds-quote">
+  <div class="ds-quote-title">Para Light Electronics, PL-IRM1838B Data Sheet 確認結果</div>
+  <ul>
+    <li><strong>中心周波数：</strong>37.9kHz（38kHz に極めて近い）</li>
+    <li><strong>電源電圧：</strong>2.7V 〜 5.5V（3.3V 動作で問題なし）</li>
+    <li><strong>出力形式：</strong>アクティブ LOW（赤外線を検出している間が LOW）</li>
+    <li><strong>出力レベル：</strong>3.3V 給電時、HIGH は約 3V（Pico の GPIO に直接入力可能）</li>
+    <li><strong>Pin 配置（受光部を正面から見て、足を下に）：</strong>左から Pin 1=Output、Pin 2=Ground、Pin 3=Vcc</li>
+    <li><strong>推奨応用回路：</strong>VCC 直前に 47〜100Ω の直列抵抗、VCC-GND 間に 47µF のコンデンサを配置</li>
+  </ul>
+</div>
+
+<p>データシートを確認すると、3.3V 給電で動作し、出力も 3V 程度なので Pico の GPIO へそのままつなげて安全であることが分かります。また、メーカーが推奨する電源フィルタがあることが判明しました。</p>
+
+<div class="box box-ok">
+  <strong>選定：PL-IRM1838B</strong><br>
+  理由：3.3V 動作、38kHz 復調、出力レベルが Pico にそのまま入力可能。メーカー資料で Pin 配置（1=OUT, 2=GND, 3=VCC）が確定している。
+</div>
+
+<h2>3. 電源フィルタを入れる理由</h2>
+
+<p>データシートの「推奨応用回路」に従い、以下の部品を追加します：</p>
+
+<table>
+  <tr><th>部品</th><th>値</th><th>接続場所</th><th>役割</th></tr>
+  <tr>
+    <td>抵抗</td>
+    <td><strong>100Ω ×1</strong></td>
+    <td>3.3V → PL-IRM1838B VCC の直前</td>
+    <td>電源フィルタ。メーカー推奨の 47〜100Ω の範囲内。手元の ELEGOO キットに入っている可能性が高い。</td>
+  </tr>
+  <tr>
+    <td>電解コンデンサ</td>
+    <td><strong>47µF ×1</strong></td>
+    <td>PL-IRM1838B 側 VCC-GND 間</td>
+    <td>受信モジュールの電源ノイズを減らす。極性あり（＋を VCC 側、−を GND 側）。秋月 117887 などを追加購入。</td>
+  </tr>
+</table>
+
+<div class="box box-info">
+  <strong>なぜフィルタが必要か</strong><br>
+  Pico の 3.3V 電源は比較的きれいですが、USB 給電や Pico 内部の動作によって微小なノイズが乗ることがあります。PL-IRM1838B はこのノイズを「赤外線信号」と誤認識してしまう可能性があります。直列抵抗と並列コンデンサで「急な電圧変化を吸収し、モジュールには滑らかな電圧だけを届ける」ことで、誤動作を防ぎます。
+</div>
+
+<h2>4. 配線を決める</h2>
+
+<p>データシートで確認した Pin 配置に従い、以下のように接続します。</p>
+
+<table>
+  <tr><th>PL-IRM1838B</th><th>Pico 2 WH</th><th>理由</th></tr>
+  <tr><td>Pin 1 OUT</td><td>GP16 / Pin 21</td><td>受信信号を Pico へ入力。アクティブ LOW。</td></tr>
+  <tr><td>Pin 2 GND</td><td>GND</td><td>共通の 0V 基準。</td></tr>
+  <tr><td>Pin 3 VCC</td><td>3.3V（100Ω 経由）</td><td>3.3V は動作範囲 2.7〜5.5V 内。フィルタ抵抗を直前に入れる。</td></tr>
+  <tr><td>—</td><td>—</td><td>47µF は VCC-GND 間に並列。＋を VCC 側、−を GND 側。</td></tr>
+</table>
+
+<div class="diagram">
+  <svg viewBox="0 0 640 260" xmlns="http://www.w3.org/2000/svg">
+    <rect x="0" y="0" width="640" height="260" fill="#f8fafc" rx="12"/>
+    <text x="40" y="45" font-size="13" font-weight="bold" fill="#374151">3.3V (Pin 36)</text>
+    <line x1="40" y1="55" x2="40" y2="150" stroke="#2563eb" stroke-width="2"/>
+    <line x1="40" y1="150" x2="100" y2="150" stroke="#2563eb" stroke-width="2"/>
+    <rect x="100" y="140" width="40" height="20" fill="#fde68a" stroke="#d97706" stroke-width="1.5" rx="2"/>
+    <text x="120" y="135" text-anchor="middle" font-size="11" fill="#92400e">100Ω</text>
+    <text x="120" y="128" text-anchor="middle" font-size="9" fill="#6b7280">電源フィルタ</text>
+    <line x1="140" y1="150" x2="190" y2="150" stroke="#2563eb" stroke-width="2"/>
+    <line x1="190" y1="150" x2="190" y2="180" stroke="#2563eb" stroke-width="2"/>
+    <line x1="180" y1="180" x2="200" y2="180" stroke="#374151" stroke-width="2"/>
+    <line x1="180" y1="185" x2="200" y2="185" stroke="#374151" stroke-width="2"/>
+    <text x="220" y="185" font-size="11" fill="#374151">47µF</text>
+    <line x1="190" y1="185" x2="190" y2="210" stroke="#374151" stroke-width="2"/>
+    <line x1="190" y1="210" x2="40" y2="210" stroke="#374151" stroke-width="2"/>
+    <text x="30" y="225" font-size="13" font-weight="bold" fill="#374151">GND</text>
+    <rect x="230" y="120" width="130" height="70" rx="6" fill="#fff" stroke="#2563eb" stroke-width="2"/>
+    <text x="295" y="145" text-anchor="middle" font-size="12" font-weight="bold" fill="#1e3a8a">PL-IRM1838B</text>
+    <text x="295" y="162" text-anchor="middle" font-size="10" fill="#4b5563">1=OUT 2=GND 3=VCC</text>
+    <text x="295" y="175" text-anchor="middle" font-size="9" fill="#6b7280">受光部を正面に</text>
+    <line x1="230" y1="150" x2="190" y2="150" stroke="#2563eb" stroke-width="2"/>
+    <line x1="230" y1="165" x2="190" y2="210" stroke="#374151" stroke-width="2"/>
+    <line x1="360" y1="145" x2="450" y2="145" stroke="#10b981" stroke-width="2"/>
+    <text x="405" y="135" text-anchor="middle" font-size="11" fill="#065f46">OUT → GP16</text>
+    <polygon points="450,145 440,140 440,150" fill="#10b981"/>
+    <rect x="460" y="115" width="90" height="60" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+    <text x="505" y="140" text-anchor="middle" font-size="11" font-weight="bold" fill="#1e3a8a">Pico 2 WH</text>
+    <text x="505" y="158" text-anchor="middle" font-size="9" fill="#1e3a8a">GPIO 入力</text>
+    <text x="295" y="80" text-anchor="middle" font-size="11" fill="#6b7280">メーカー推奨の電源フィルタでノイズを除去</text>
+    <line x1="295" y1="85" x2="295" y2="115" stroke="#9ca3af" stroke-width="1" stroke-dasharray="4"/>
+  </svg>
+  <p class="diagram-caption">図1：PL-IRM1838B の電源フィルタ回路。データシート推奨に従い、ノイズ対策を先に組み込む。</p>
+</div>
+
+<h2>5. 純正リモコンの信号を観察する</h2>
+
+<p>PL-IRM1838B を接続したら、まず純正リモコン RAR-8P2 の信号を観察します。エアコンに向けたまま、横から受信モジュールで拾います。</p>
+
+<p>日立の公開仕様では、赤外線キャリア周波数や通信フォーマットまでは確認できていません。そのため「日立だから NEC 方式」「必ず 38.0kHz」と決めつけず、PL-IRM1838B で純正リモコンの信号を実測します。PL-IRM1838B の中心周波数は 37.9kHz なので、まず実機の RAR-8P2 を受信できるかを確認し、受信できた MARK/SPACE 時間列をそのまま学習対象にします。</p>
+
+<div class="box box-info">
+  <strong>データシートで分かったこと</strong><br>
+  PL-IRM1838B は 37.9kHz の変調を復調するため、38kHz 帯のリモコン信号を受信できます。ただし、エアコンの正確なキャリア周波数はデータシートでは分からないため、実測で確認する必要があります。受信できた時間列をそのまま保存して再送信する「学習方式」を取ります。
+</div>
+
+<h2>6. 受信実験のコード</h2>
+
+<p>まずは独立した実験として、純正リモコンの信号を観察します。</p>
+
+<pre><code>from machine import Pin
+from time import ticks_us, ticks_diff, sleep_ms
+
+IR_RX = 16
+pin = Pin(IR_RX, Pin.IN)
+last = ticks_us()
+pulses = []
+
+def edge(p):
+    global last
+    now = ticks_us()
+    pulses.append((p.value(), ticks_diff(now, last)))
+    last = now
+
+pin.irq(trigger=Pin.IRQ_RISING | Pin.IRQ_FALLING, handler=edge)
+
+print("純正リモコンをエアコンへ向けて1回操作")
+sleep_ms(3000)
+pin.irq(handler=None)
+print(pulses)
+</code></pre>
+
+<p>これは最初の観察用コードです。各要素に入る時間は「直前のエッジから今回のエッジまで」の長さなので、最初の 1 要素をそのまま MARK 開始と決めつけず、信号の開始位置を確認してから MARK/SPACE へ整理します。</p>
+
+<div class="pager"><a href="yaritai/page1.html">← 第1章：目的とマイコン選定へ</a><span></span><a href="yaritai/page3.html">第3章：赤外線送信の仕組みへ →</a></div>
+<footer>
+  <p>やりたいことから始める 赤外線エアコンIoT — 思考の流れ版</p>
+  <p style="font-size:0.8rem; margin-top:0.5rem;">対象機種：日立 白くまくん RAS-AJ3626S / リモコン RAR-8P2</p>
+</footer>
+</div>
+</body>
+</html>
