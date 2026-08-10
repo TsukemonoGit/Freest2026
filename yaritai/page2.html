@@ -55,7 +55,7 @@
   footer { text-align: center; margin-top: 3rem; padding: 2rem 0; color: var(--muted); font-size: 0.85rem; border-top: 1px solid var(--border); }
   @media (max-width: 600px) { h1 { font-size: 1.3rem; } .container { padding: 1rem; } }
 </style>
-
+<base target="_blank">
 </head>
 <body>
 <div class="container">
@@ -64,11 +64,18 @@
   <p class="subtitle">第2章：赤外線受信の仕組み — PL-IRM1838B のデータシート確認と電源フィルタ</p>
 </header>
 
-<h2>1. なぜ受信モジュールが必要か</h2>
+<h2>1. 受信モジュールの役割</h2>
 
-<p>エアコンの純正リモコン（RAR-8P2）が出す赤外線信号は、人の目には見えない光の点滅です。Pico の GPIO は「光」を直接読めないので、光を電気信号に変換してくれる部品が必要です。</p>
+<p>前章で見たように、エアコンのリモコン信号は <strong>38kHz の搬送波</strong>の上に、<strong>µs 単位の MARK/SPACE</strong> でデータが乗っています。Pico の GPIO は「光」を直接読めないし、38,000 回/秒の点滅をソフトウェアで追いかけるのは負荷が高いです。</p>
 
-<p>さらに、リモコンの赤外線 LED は <strong>38kHz で高速点滅（変調）</strong>しています。Pico に「38,000 回/秒の光を直接数えてほしい」とお願いするのは大変なので、「38kHz の変調を検出して、光が来ている間は LOW、来ていない間は HIGH として出力してくれる」モジュールを使います。</p>
+<p>そこで、以下の 2 つの処理を<strong>ハードウェアで肩代わり</strong>してくれる受信モジュールを使います：</p>
+
+<ul>
+  <li><strong>38kHz の変調を検出</strong>して、「光が来ている／来ていない」をデジタル信号（HIGH/LOW）に変換</li>
+  <li><strong>ノイズを除去</strong>して、エアコンの受信部と同じ基準で「本物の信号かどうか」を判断</li>
+</ul>
+
+<p>つまり、受信モジュールを使えば、Pico は「µs 単位で GPIO の HIGH/LOW を読む」ことに集中でき、38kHz の復調という面倒な作業はモジュールに任せられます。</p>
 
 <h2>2. データシートを確認するとどうなっているか</h2>
 

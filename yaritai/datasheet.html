@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>コラム：データシートの読み方</title>
+<style>
+  :root {
+    --bg: #fafafa; --text: #1a1a1a; --muted: #555;
+    --accent: #2563eb; --accent-light: #dbeafe; --border: #e5e7eb;
+    --code-bg: #f3f4f6; --warn: #f59e0b; --warn-bg: #fffbeb;
+    --ok: #10b981; --ok-bg: #ecfdf5; --danger: #ef4444; --danger-bg: #fee2e2;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: var(--bg); color: var(--text); line-height: 1.7; margin: 0; padding: 0;
+  }
+  .container { max-width: 880px; margin: 0 auto; padding: 2rem 1.5rem; }
+  header { text-align: center; padding: 2rem 0 1.5rem; border-bottom: 2px solid var(--border); margin-bottom: 2rem; }
+  h1 { font-size: 1.7rem; margin: 0 0 0.5rem; letter-spacing: -0.02em; }
+  .subtitle { color: var(--muted); font-size: 1rem; }
+  h2 { font-size: 1.3rem; margin-top: 2.5rem; margin-bottom: 1rem; padding-bottom: 0.3rem; border-bottom: 2px solid var(--accent); display: inline-block; }
+  h3 { font-size: 1.1rem; margin-top: 2rem; color: var(--accent); }
+  h4 { font-size: 1rem; margin-top: 1.5rem; color: #374151; }
+  p { margin: 1rem 0; }
+  .lead { font-size: 1.1rem; color: var(--muted); background: var(--accent-light); padding: 1.2rem; border-radius: 8px; border-left: 4px solid var(--accent); }
+  .diagram { background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; margin: 1.5rem 0; overflow-x: auto; }
+  .diagram svg { display: block; margin: 0 auto; max-width: 100%; height: auto; }
+  .diagram-caption { text-align: center; font-size: 0.85rem; color: var(--muted); margin-top: 0.75rem; }
+  table { width: 100%; border-collapse: collapse; margin: 1.5rem 0; font-size: 0.95rem; }
+  th, td { border: 1px solid var(--border); padding: 0.6rem 0.8rem; text-align: left; }
+  th { background: var(--accent-light); font-weight: 600; }
+  tr:nth-child(even) { background: #f9fafb; }
+  code { background: var(--code-bg); padding: 0.15rem 0.35rem; border-radius: 4px; font-family: "SFMono-Regular", Consolas, monospace; font-size: 0.9em; }
+  pre { background: var(--code-bg); padding: 1rem; border-radius: 8px; overflow-x: auto; font-size: 0.9rem; }
+  .box { background: #fff; border: 1px solid var(--border); border-radius: 8px; padding: 1.2rem; margin: 1rem 0; }
+  .box-warn { background: var(--warn-bg); border-color: #fcd34d; }
+  .box-ok { background: var(--ok-bg); border-color: #6ee7b7; }
+  .box-danger { background: var(--danger-bg); border-color: #fca5a5; }
+  .box-info { background: #eff6ff; border-color: #93c5fd; }
+  .step { display: flex; gap: 1rem; align-items: flex-start; margin: 1.5rem 0; }
+  .step-num { flex-shrink: 0; width: 2.2rem; height: 2.2rem; background: var(--accent); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1rem; }
+  .step-body { flex: 1; }
+  .step-body h4 { margin: 0 0 0.4rem; font-size: 1.05rem; }
+  ul, ol { padding-left: 1.5rem; }
+  li { margin: 0.4rem 0; }
+  .highlight { background: linear-gradient(transparent 60%, #fde047 60%); padding: 0 0.1rem; }
+  .ds-quote { background: #f0fdf4; border-left: 4px solid #22c55e; padding: 1rem; margin: 1rem 0; border-radius: 0 8px 8px 0; }
+  .ds-quote-title { font-weight: bold; color: #15803d; margin-bottom: 0.5rem; }
+  .pager { display: flex; justify-content: center; margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid var(--border); }
+  .pager a { color: var(--accent); text-decoration: none; font-weight: 600; }
+  .pager a:hover { text-decoration: underline; }
+  .pager .disabled { color: #9ca3af; pointer-events: none; }
+  footer { text-align: center; margin-top: 3rem; padding: 2rem 0; color: var(--muted); font-size: 0.85rem; border-top: 1px solid var(--border); }
+  @media (max-width: 600px) { h1 { font-size: 1.3rem; } .container { padding: 1rem; } }
+</style>
+<base target="_blank">
+</head>
+<body>
+<div class="container">
+<header>
+  <h1>コラム：データシートの読み方</h1>
+  <p class="subtitle">部品選定の根拠を、公式資料で確認する方法</p>
+</header>
+
+<p class="lead">
+  本シリーズでは各章で部品を選ぶたび、必ずメーカーのデータシートを確認している。ここでは「データシートとは何か」「どこから入手するか」「どこを読めば必要な情報にたどり着けるか」を独立したコラムとしてまとめる。
+</p>
+
+<h2>1. データシートとは何か</h2>
+
+<p>データシートは、部品メーカーが発行する<strong>公式の技術仕様書</strong>である。電圧・電流・タイミング・寸法・ピン配置など、その部品を安全かつ正しく使うために必要な情報が数値で示されている。</p>
+
+<p>通販サイトの商品説明やブログ記事の情報は、書き手の解釈や省略が入っている場合がある。一方データシートはメーカー自身が保証する一次情報であり、数値の根拠として扱える。</p>
+
+<div class="box box-info">
+  <strong>一次情報と二次情報の違い</strong><br>
+  データシート＝メーカーが発行する一次情報。ブログ・Q&amp;Aサイト・通販ページの説明＝二次情報（要約や体験談を含み、誤りや古い情報が混在しうる）。数値を根拠にする場面では一次情報を確認する。
+</div>
+
+<h2>2. どこから入手するか</h2>
+
+<ul>
+  <li><strong>メーカー公式サイト</strong>：型番で検索し、製品ページから PDF をダウンロードする。最も信頼できる入手経路。</li>
+  <li><strong>販売店（秋月電子、Digi-Key、Mouser など）の商品ページ</strong>：多くの場合「データシート」リンクがメーカーPDFへ直接張られている。型番検索より早い場合が多い。</li>
+  <li><strong>Raspberry Pi 財団・Espressif など基板メーカーのドキュメントサイト</strong>：Pico や ESP32 のようなモジュールは、単体部品のデータシートに加えて「ボード全体の仕様書」も別途公開されている。両方を確認する必要がある。</li>
+</ul>
+
+<div class="box box-warn">
+  <strong>型番のサフィックスに注意</strong><br>
+  同じ型番でもサフィックス（末尾の記号）違いで仕様が異なる場合がある。例：Pico 2 と Pico 2 W（無線の有無）、Pico 2 W と Pico 2 WH（ヘッダーピンの有無）。購入予定の型番と、データシートに書かれている型番が完全に一致しているか確認する。
+</div>
+
+<h2>3. 読むときのコツ — どこを見るべきか</h2>
+
+<p>データシートは数十ページに及ぶことが多い。全ページを読む必要はなく、目的に応じて見るべき箇所が決まっている。</p>
+
+<div class="diagram">
+  <svg viewBox="0 0 720 300" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <marker id="arrds" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+        <path d="M0,0 L0,6 L9,3 z" fill="#2563eb"/>
+      </marker>
+    </defs>
+    <rect x="0" y="0" width="720" height="300" fill="#f8fafc" rx="12"/>
+    <text x="360" y="30" text-anchor="middle" font-size="13" font-weight="bold" fill="#374151">データシートを読む順序</text>
+
+    <rect x="30" y="55" width="150" height="60" rx="8" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+    <text x="105" y="78" text-anchor="middle" font-size="11" font-weight="bold" fill="#1e3a8a">① 概要</text>
+    <text x="105" y="95" text-anchor="middle" font-size="10" fill="#1e3a8a">Features / Overview</text>
+
+    <line x1="180" y1="85" x2="220" y2="85" stroke="#2563eb" stroke-width="2" marker-end="url(#arrds)"/>
+
+    <rect x="230" y="55" width="150" height="60" rx="8" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+    <text x="305" y="78" text-anchor="middle" font-size="11" font-weight="bold" fill="#1e3a8a">② ピン配置</text>
+    <text x="305" y="95" text-anchor="middle" font-size="10" fill="#1e3a8a">Pin Configuration</text>
+
+    <line x1="380" y1="85" x2="420" y2="85" stroke="#2563eb" stroke-width="2" marker-end="url(#arrds)"/>
+
+    <rect x="430" y="55" width="150" height="60" rx="8" fill="#fee2e2" stroke="#ef4444" stroke-width="2"/>
+    <text x="505" y="72" text-anchor="middle" font-size="11" font-weight="bold" fill="#991b1b">③ 絶対最大定格</text>
+    <text x="505" y="88" text-anchor="middle" font-size="10" fill="#991b1b">Absolute Max Ratings</text>
+    <text x="505" y="103" text-anchor="middle" font-size="9" fill="#991b1b">超えると破壊</text>
+
+    <line x1="580" y1="85" x2="620" y2="85" stroke="#2563eb" stroke-width="2" marker-end="url(#arrds)"/>
+
+    <rect x="630" y="55" width="70" height="60" rx="8" fill="#f3f4f6" stroke="#9ca3af" stroke-width="2"/>
+    <text x="665" y="80" text-anchor="middle" font-size="10" fill="#4b5563">④</text>
+    <text x="665" y="95" text-anchor="middle" font-size="9" fill="#4b5563">続く↓</text>
+
+    <line x1="665" y1="115" x2="665" y2="150" stroke="#2563eb" stroke-width="2"/>
+    <line x1="665" y1="150" x2="580" y2="150" stroke="#2563eb" stroke-width="2" marker-end="url(#arrds)"/>
+
+    <rect x="430" y="150" width="150" height="60" rx="8" fill="#fffbeb" stroke="#f59e0b" stroke-width="2"/>
+    <text x="505" y="170" text-anchor="middle" font-size="11" font-weight="bold" fill="#92400e">④ 推奨動作条件</text>
+    <text x="505" y="186" text-anchor="middle" font-size="10" fill="#92400e">Recommended Operating</text>
+    <text x="505" y="200" text-anchor="middle" font-size="9" fill="#92400e">実際に使う範囲</text>
+
+    <line x1="430" y1="180" x2="380" y2="180" stroke="#2563eb" stroke-width="2" marker-end="url(#arrds)"/>
+
+    <rect x="230" y="150" width="150" height="60" rx="8" fill="#fffbeb" stroke="#f59e0b" stroke-width="2"/>
+    <text x="305" y="170" text-anchor="middle" font-size="11" font-weight="bold" fill="#92400e">⑤ 電気的特性</text>
+    <text x="305" y="186" text-anchor="middle" font-size="10" fill="#92400e">Electrical Characteristics</text>
+    <text x="305" y="200" text-anchor="middle" font-size="9" fill="#92400e">電流・電圧の実測範囲</text>
+
+    <line x1="230" y1="180" x2="180" y2="180" stroke="#2563eb" stroke-width="2" marker-end="url(#arrds)"/>
+
+    <rect x="30" y="150" width="150" height="60" rx="8" fill="#ecfdf5" stroke="#10b981" stroke-width="2"/>
+    <text x="105" y="170" text-anchor="middle" font-size="11" font-weight="bold" fill="#065f46">⑥ タイミング図</text>
+    <text x="105" y="186" text-anchor="middle" font-size="10" fill="#065f46">Timing Diagram</text>
+    <text x="105" y="200" text-anchor="middle" font-size="9" fill="#065f46">通信プロトコル部品で必須</text>
+
+    <line x1="105" y1="210" x2="105" y2="240" stroke="#2563eb" stroke-width="2" marker-end="url(#arrds)"/>
+
+    <rect x="30" y="245" width="550" height="45" rx="8" fill="#eff6ff" stroke="#3b82f6" stroke-width="2"/>
+    <text x="305" y="272" text-anchor="middle" font-size="11" font-weight="bold" fill="#1e40af">⑦ 応用回路例（Application / Typical Circuit）— 外付け部品の値はここに載っている</text>
+  </svg>
+  <p class="diagram-caption">図：初心者がデータシートを読む際の優先順位。①〜⑦の順で必要な情報に到達できる。</p>
+</div>
+
+<table>
+  <tr><th>セクション名（英語表記の例）</th><th>ここで分かること</th></tr>
+  <tr><td>Features / Overview（概要）</td><td>その部品が何をするものか、大まかな性能</td></tr>
+  <tr><td>Pin Configuration（ピン配置）</td><td>どのピンが電源・GND・信号かの対応表</td></tr>
+  <tr><td>Absolute Maximum Ratings（絶対最大定格）</td><td>瞬間的にも超えてはいけない限界値。超えると破壊の可能性がある</td></tr>
+  <tr><td>Recommended Operating Conditions（推奨動作条件）</td><td>実際に安定して使ってよい電圧・温度などの範囲</td></tr>
+  <tr><td>Electrical Characteristics（電気的特性）</td><td>消費電流、信号レベル（HIGH/LOWの電圧閾値）など</td></tr>
+  <tr><td>Timing Diagram（タイミング図）</td><td>通信プロトコルを持つ部品で、信号の立ち上がり・立ち下がりのタイミング</td></tr>
+  <tr><td>Application Circuit（応用回路例）</td><td>プルアップ抵抗値・コンデンサ容量など、メーカー推奨の外付け部品の値</td></tr>
+</table>
+
+<div class="box box-danger">
+  <strong>絶対最大定格 ≠ 推奨動作条件</strong><br>
+  「絶対最大定格」は超えた瞬間に壊れる可能性がある限界値であり、常用してよい値ではない。実際の設計では必ず「推奨動作条件」の範囲内で使う。両者を混同すると、動くには動くが寿命が縮む、あるいは条件次第で壊れる設計になる。
+</div>
+
+<h2>4. 今回のプロジェクトで実際に確認した例</h2>
+
+<p>第1章・第4章で部品選定の根拠として引用したデータシート記載事項を、確認箇所とあわせて整理する。</p>
+
+<table>
+  <tr><th>部品</th><th>確認したセクション</th><th>分かったこと</th><th>設計への影響</th></tr>
+  <tr>
+    <td>Raspberry Pi Pico 2 W</td>
+    <td>Electrical Characteristics（GPIO仕様）</td>
+    <td>GPIO電圧は3.3V固定、5Vトレラントではない</td>
+    <td>周辺部品をすべて3.3V系で統一する方針に決定</td>
+  </tr>
+  <tr>
+    <td>DHT20（Aosong / ASAIR）</td>
+    <td>Application Circuit（応用回路例）</td>
+    <td>プルアップ抵抗の代表値4.7kΩ、デカップリングコンデンサ100nFが明記</td>
+    <td>手持ちの5kΩ抵抗が代用可能と判断する根拠になった</td>
+  </tr>
+  <tr>
+    <td>DHT20</td>
+    <td>Pin Configuration（ピン配置）</td>
+    <td>1=VDD、2=SDA、3=GND、4=SCLの並び</td>
+    <td>配線ミスの防止（ピン番号だけでは並びが分からないため必須確認）</td>
+  </tr>
+</table>
+
+<div class="ds-quote">
+  <div class="ds-quote-title">読み方の実例（DHT20の場合）</div>
+  <p style="margin:0;">「プルアップ抵抗は何Ωにすべきか」という疑問に対し、ブログ記事の値をそのまま真似るのではなく、DHT20データシートのApplication Circuitセクションで代表値4.7kΩが明記されていることを確認し、それを基準に手持ち部品（5kΩ）の代用可否を判断した。これが「データシートを根拠にする」という作業の具体例である。</p>
+</div>
+
+<h2>5. 落とし穴・注意点</h2>
+
+<div class="step">
+  <div class="step-num">1</div>
+  <div class="step-body">
+    <h4>単位の見落とし</h4>
+    <p>µF・nF・pF、mA・µA、kΩ・MΩ など、桁が3桁ずつ変わる単位が混在する。読み間違えると1000倍の誤差になる。</p>
+  </div>
+</div>
+
+<div class="step">
+  <div class="step-num">2</div>
+  <div class="step-body">
+    <h4>Typical（標準値）とMax/Min（最大/最小値）の違い</h4>
+    <p>電気的特性の表には Min / Typ / Max の3列が並ぶことが多い。Typ（標準値）だけを見て設計すると、個体差でMax側に外れた個体で動作しない場合がある。余裕を持たせるにはMax/Min側の値も確認する。</p>
+  </div>
+</div>
+
+<div class="step">
+  <div class="step-num">3</div>
+  <div class="step-body">
+    <h4>版（Revision）違い</h4>
+    <p>同じ型番でもデータシートに改版履歴（Revision History）があり、値が修正されている場合がある。表紙またはページ下部の版番号・発行日を確認し、できるだけ最新版を参照する。</p>
+  </div>
+</div>
+
+<div class="step">
+  <div class="step-num">4</div>
+  <div class="step-body">
+    <h4>ディスコン（生産終了）品</h4>
+    <p>データシートが検索で見つかっても、その部品自体が生産終了（EOL: End of Life）の場合がある。販売店の在庫状況とあわせて確認する。</p>
+  </div>
+</div>
+
+<div class="step">
+  <div class="step-num">5</div>
+  <div class="step-body">
+    <h4>モジュール基板か単体部品か</h4>
+    <p>「DHT20モジュール」と「DHT20単体」では、前者はプルアップ抵抗やコンデンサが基板上に実装済みの場合がある。データシートがどちらを対象にしているか（センサー単体か、実装済み基板か）を確認しないと、外付け部品の要否を誤る。</p>
+  </div>
+</div>
+
+<div class="pager">
+  <a href="../index.html">← TOP</a>
+</div>
+<footer>
+  <p>やりたいことから始める 赤外線エアコンIoT — 思考の流れ版（コラム）</p>
+  <p style="font-size:0.8rem; margin-top:0.5rem;">対象機種：日立 白くまくん RAS-AJ3626S / リモコン RAR-8P2</p>
+</footer>
+</div>
+</body>
+</html>
