@@ -69,6 +69,52 @@
 
 ---
 
+## 実装環境：まずここを揃える
+
+### 言語：MicroPython
+
+Pico 2 WH で赤外線の送受信をするために、以下の3つを比較した：
+
+| | MicroPython | Arduino／C++ | Pico SDK（C／C++） |
+|---|---|---|---|
+| 始めやすさ | REPLからすぐ試せる | 導入は比較的簡単 | ビルド環境が必要 |
+| 時間測定 | IRQ＋ticks_usでµs測定 | 割込みで安定して測定 | PIO・DMAまで細かく制御 |
+| 解析の見え方 | 時間列を自分で処理できる | ライブラリ利用では中身が隠れやすい | 最も正確だがコード量が増える |
+
+**選んだ理由：** 最初に「信号が届いているか」をすぐ確認したい。
+REPL（対話式シェル）からコードを打てばその場で動くのが、
+初心者が「動いてるか見えない」問題を減らす。
+
+### IDE：VS Code + Raspberry Pi Pico 拡張
+
+VS Code に Raspberry Pi 公式の拡張機能をインストールする。
+MicroPython でも C/C++ でも同じ環境で開発できる。
+REPL（対話式シェル）が拡張機能に内蔵されており、
+コードを打てばその場で Pico 上で動かせる。
+
+**他の選択肢：**
+- Thonny：もっとシンプルだが機能が少ない
+- Mu Editor：デバッガーがない
+- 詳細は IDE 比較資料（ide_comparison.md）を参照
+
+### セットアップ手順
+
+1. VS Code をインストールする（ https://code.visualstudio.com/ ）
+2. VS Code の拡張機能で「Raspberry Pi Pico」を検索してインストールする
+   （published by Raspberry Pi）
+3. Pico 2 WH を USB ケーブルで PC に接続する
+4. VS Code 左サイドバーの Raspberry Pi アイコンをクリックする
+5.「New MicroPython Project」を作成する
+6. MicroPython ターミナル（REPL）が開いて `>>>` が表示されれば接続成功
+7. 試しにシェルで以下を打つ：
+   ```
+   >>> from machine import Pin
+   >>> print("OK")
+   ```
+   `OK` と表示されれば、MicroPython が動いている
+
+---
+
 ## テストの方法
 
 ### 基本ルール：「1段階書いたら、そのたびに動かして確認する」
@@ -104,16 +150,19 @@ if __name__ == "__main__":
 - ファイルを**直接実行**したとき → `__name__` は `"__main__"` になる → テストコードが動く
 - 別のファイルから **import された**とき → `__name__` は `"capture"` になる → テストコードは動かない
 
-### Thonneyで実行する手順
+### VS Code で実行する手順
 
-1. Thonneyで Pico に接続する
+1. VS Code で Pico に接続する（MicroPython ターミナルが開いている状態）
 2. テストしたいファイル（例：`capture.py`）を開く
-3. 「実行」ボタン（▶）を押す
+3. ターミナルで実行する：
+   ```
+   >>> exec(open("capture.py").read())
+   ```
 4. シェルに結果が出力される
 5. リモコンを押して動作を確認する
 
 **注意：** この状態で `main.py` もPicoに存在する場合、
-Thonneyから実行したときは `capture.py` が動いて、
+手動で実行したときは `capture.py` が動いて、
 Picoを電源再投入したときは `main.py` が動く。
 2つのファイルが干渉しないように、テスト中は `main.py` をリネームするか消しておく。
 
